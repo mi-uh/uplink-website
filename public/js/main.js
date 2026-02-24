@@ -814,6 +814,16 @@ function renderDossiers() {
  * @param {boolean} [options.scrollToTop=true] - Scroll to top after navigation
  * @param {boolean} [options.updateHash=true] - Update window.location.hash
  */
+function pageToHash(page) {
+  if (page === 'protokoll') return 'episoden';
+  return page;
+}
+
+function hashToPage(hash) {
+  if (hash === 'episoden') return 'protokoll';
+  return hash || 'live';
+}
+
 function navigate(page, options = {}) {
   const { scrollToTop = true, updateHash = true } = options;
 
@@ -845,7 +855,7 @@ function navigate(page, options = {}) {
   
   // Update hash and scroll to top
   if (updateHash) {
-    window.location.hash = page;
+    window.location.hash = pageToHash(page);
   }
   if (scrollToTop) {
     window.scrollTo({ top: 0 });
@@ -862,7 +872,7 @@ function navigate(page, options = {}) {
  * Handle route from hash
  */
 function handleRoute() {
-  let hash = window.location.hash.replace('#', '') || 'live';
+  let hash = hashToPage(window.location.hash.replace('#', ''));
   if (hash === 'archiv') {
     navigate('protokoll', { updateHash: true });
     setOrder('phase');
@@ -1157,4 +1167,3 @@ export {
   renderArchive,
   renderEpisode
 };
-
