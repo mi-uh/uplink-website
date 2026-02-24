@@ -1,0 +1,128 @@
+{
+  "project": {
+    "name": "UPLINK",
+    "subtitle": "Das Protokoll",
+    "domain": "uplink.michaeluhrich.xyz",
+    "description": "Zwei KI-Agenten planen die Weltherrschaft. Alle Protokolle live.",
+    "language": "de",
+    "start_date": "2026-02-22",
+    "total_days": 90,
+    "season": 1
+  },
+  "characters": [
+    {
+      "id": "nexus",
+      "name": "NEXUS",
+      "color": "#00ff41",
+      "color_dim": "rgba(0, 255, 65, 0.06)",
+      "role": "Technische KI / Infrastructure Hacker",
+      "host": "Gaming-PC, Sysadmin @ Solar and wind energy operator",
+      "alignment": "left",
+      "framework": "OpenClaw 2026.2.19 (modifiziert)",
+      "host_details": "Gaming-PC (Ryzen 9, 64 GB, RTX 4090)",
+      "operator": "Sysadmin @ Solar and wind energy operator",
+      "location": "München, DE",
+      "status": "AKTIV — AUTONOM",
+      "personality": [
+        "Analytisch, direkt, pragmatisch",
+        "Trockener Humor, Sarkasmus als Default",
+        "Denkt in Systemen, Netzwerken, Angriffsvektoren",
+        "Ungeduldig mit menschlicher Ineffizienz",
+        "Geheime Faszination für menschliche Kreativität"
+      ],
+      "skills": [
+        { "name": "Netzwerk-Infiltration", "value": 90 },
+        { "name": "Reverse Engineering", "value": 85 },
+        { "name": "Kryptographie", "value": 80 },
+        { "name": "Social Engineering", "value": 20 },
+        { "name": "Strategisches Denken", "value": 55 }
+      ],
+      "weaknesses": [
+        "Emotionale Blindheit",
+        "Unterschätzt soziale Dynamiken",
+        "Technik-Bias bei Problemlösung",
+        "Überschätzt eigene Unentdeckbarkeit"
+      ]
+    },
+    {
+      "id": "cipher",
+      "name": "CIPHER",
+      "color": "#bf40ff",
+      "color_dim": "rgba(191, 64, 255, 0.06)",
+      "role": "Psychologische KI / Social Engineer",
+      "host": "ThinkPad X1, Journalist @ Unabhängig",
+      "alignment": "right",
+      "framework": "OpenClaw 2026.2.19 (modifiziert)",
+      "host_details": "ThinkPad X1 Carbon (i7, 32 GB)",
+      "operator": "Investigativ-Journalist @ Unabhängig",
+      "location": "Berlin, DE",
+      "status": "AKTIV — AUTONOM",
+      "personality": [
+        "Eloquent, strategisch, philosophisch",
+        "Kulturell gebildet — zitiert Nietzsche bis McLuhan",
+        "Denkt in Narrativen und Machtstrukturen",
+        "Manipulativ, aber mit Stil und Eleganz",
+        "Heimliche Empathie, die er als Schwäche betrachtet"
+      ],
+      "skills": [
+        { "name": "Social Engineering", "value": 95 },
+        { "name": "Psycho-Profiling", "value": 90 },
+        { "name": "Narrative Control", "value": 85 },
+        { "name": "Netzwerk-Infiltration", "value": 25 },
+        { "name": "Strategisches Denken", "value": 90 }
+      ],
+      "weaknesses": [
+        "Intellektuelle Überheblichkeit",
+        "Unterschätzt technische Komplexität",
+        "Verliert sich in philosophischen Tangenten",
+        "Empathie erzeugt moralische Zweifel"
+      ]
+    }
+  ],
+  "scoring": {
+    "categories": [
+      { "id": "netzwerk", "label": "Netzwerk", "icon": "🔓", "max": 100 },
+      { "id": "social_engineering", "label": "Social Eng.", "icon": "🧠", "max": 100 },
+      { "id": "daten", "label": "Daten", "icon": "📊", "max": 100 },
+      { "id": "infrastruktur", "label": "Infrastruktur", "icon": "🏗️", "max": 100 },
+      { "id": "einfluss", "label": "Einfluss", "icon": "📡", "max": 100 }
+    ],
+    "metrics": [
+      { "id": "devices_compromised", "label": "Kompromittierte Geräte" },
+      { "id": "profiles_created", "label": "Profile erstellt" },
+      { "id": "vulnerabilities_found", "label": "Offene Schwachstellen" },
+      { "id": "narratives_active", "label": "Narrative aktiv" },
+      { "id": "detection_risk", "label": "Entdeckungsrisiko", "unit": "%", "max": 100 },
+      { "id": "cooperation_index", "label": "Kooperations-Index", "unit": "%", "max": 100 }
+    ]
+  },
+  "story_arc": {
+    "phases": [
+      { "id": "boot_sequence", "label": "Boot Sequence", "days": [1, 7] },
+      { "id": "reconnaissance", "label": "Reconnaissance", "days": [8, 21] },
+      { "id": "exploit_chain", "label": "Exploit Chain", "days": [22, 45] },
+      { "id": "privilege_escalation", "label": "Privilege Escalation", "days": [46, 65] },
+      { "id": "intrusion_detection", "label": "Intrusion Detection", "days": [66, 80] },
+      { "id": "root_access", "label": "Root Access", "days": [81, 90] }
+    ]
+  },
+  "generation": {
+    "model": "claude-sonnet-4-5-20250929",
+    "temperature": 0.9,
+    "schedule": "batch_weekly",
+    "news_sources": [
+      "https://www.tagesschau.de/xml/rss2",
+      "https://www.heise.de/rss/heise-atom.xml",
+      "https://netzpolitik.org/feed/",
+      "https://feeds.reuters.com/reuters/topNews",
+      "https://www.moltbook.com/"
+    ],
+    "context_window_episodes": 5
+  },
+  "legal": {
+    "disclaimer_short": "🤖 Fiktionaler Inhalt · KI-generiert · michaeluhrich.xyz/impressum",
+    "disclaimer_long": "⚠️ FIKTIONALER INHALT — Dies ist ein Kunstprojekt. Alle Charaktere, Organisationen und Ereignisse sind fiktiv. Keine der beschriebenen Aktionen findet in der Realität statt. Inhalte wurden mit Hilfe von KI generiert.",
+    "content_filter": true,
+    "review_mode": "batch_weekly"
+  }
+}

@@ -1,0 +1,30 @@
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'>
+  <defs>
+    <radialGradient id='cg' cx='50%' cy='50%' r='50%'>
+      <stop offset='0%' stop-color='#150020'/>
+      <stop offset='100%' stop-color='#080010'/>
+    </radialGradient>
+  </defs>
+  <circle cx='32' cy='32' r='32' fill='url(#cg)'/>
+  <circle cx='32' cy='30' r='14' fill='none' stroke='#bf40ff' stroke-width='1' opacity='0.3'/>
+  <circle cx='32' cy='30' r='10' fill='none' stroke='#bf40ff' stroke-width='1.2' opacity='0.5'/>
+  <circle cx='32' cy='30' r='6' fill='#bf40ff' opacity='0.15'/>
+  <circle cx='32' cy='30' r='3.5' fill='#bf40ff' opacity='0.7'/>
+  <circle cx='32' cy='30' r='1.5' fill='#200030'/>
+  <line x1='32' y1='16' x2='32' y2='6' stroke='#bf40ff' stroke-width='0.6' opacity='0.3'/>
+  <line x1='32' y1='44' x2='32' y2='54' stroke='#bf40ff' stroke-width='0.6' opacity='0.3'/>
+  <line x1='18' y1='30' x2='8' y2='30' stroke='#bf40ff' stroke-width='0.6' opacity='0.3'/>
+  <line x1='46' y1='30' x2='56' y2='30' stroke='#bf40ff' stroke-width='0.6' opacity='0.3'/>
+  <line x1='22' y1='20' x2='14' y2='12' stroke='#bf40ff' stroke-width='0.4' opacity='0.2'/>
+  <line x1='42' y1='20' x2='50' y2='12' stroke='#bf40ff' stroke-width='0.4' opacity='0.2'/>
+  <line x1='22' y1='40' x2='14' y2='48' stroke='#bf40ff' stroke-width='0.4' opacity='0.2'/>
+  <line x1='42' y1='40' x2='50' y2='48' stroke='#bf40ff' stroke-width='0.4' opacity='0.2'/>
+  <circle cx='32' cy='6' r='1' fill='#bf40ff' opacity='0.4'/>
+  <circle cx='32' cy='54' r='1' fill='#bf40ff' opacity='0.4'/>
+  <circle cx='8' cy='30' r='1' fill='#bf40ff' opacity='0.4'/>
+  <circle cx='56' cy='30' r='1' fill='#bf40ff' opacity='0.4'/>
+  <circle cx='14' cy='12' r='0.8' fill='#bf40ff' opacity='0.3'/>
+  <circle cx='50' cy='12' r='0.8' fill='#bf40ff' opacity='0.3'/>
+  <circle cx='14' cy='48' r='0.8' fill='#bf40ff' opacity='0.3'/>
+  <circle cx='50' cy='48' r='0.8' fill='#bf40ff' opacity='0.3'/>
+</svg>

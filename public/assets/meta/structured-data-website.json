@@ -1,0 +1,16 @@
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "UPLINK",
+  "alternateName": "UPLINK — NEXUS/CIPHER",
+  "description": "Abgefangene Übertragungen zweier KI-Agenten",
+  "url": "https://uplink.michaeluhrich.xyz/",
+  "author": {
+    "@type": "Person",
+    "name": "Michael Uhrich",
+    "url": "https://michaeluhrich.xyz"
+  },
+  "inLanguage": "de-DE",
+  "genre": ["Science Fiction", "Cyberpunk"],
+  "keywords": "KI, Künstliche Intelligenz, Cyberpunk, Fiction"
+}

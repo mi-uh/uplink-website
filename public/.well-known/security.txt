@@ -1,0 +1,10 @@
+Contact: mailto:security@michaeluhrich.xyz
+Expires: 2026-12-31T23:59:59.000Z
+Preferred-Languages: de, en
+Canonical: https://uplink.michaeluhrich.xyz/.well-known/security.txt
+
+# UPLINK is a fictional storytelling project
+# No real infrastructure or systems are described
+# All characters, organizations, and events are fictional
+
+Acknowledgments: https://michaeluhrich.xyz/

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180">
+  <!-- Background with rounded corners for iOS -->
+  <rect width="180" height="180" rx="40" fill="#0a0f1a"/>
+  
+  <!-- Terminal frame -->
+  <g transform="translate(30, 30)">
+    <rect width="120" height="120" rx="8" fill="none" stroke="#00ff9f" stroke-width="4"/>
+    <!-- Terminal header -->
+    <line x1="0" y1="20" x2="120" y2="20" stroke="#00ff9f" stroke-width="4"/>
+    <!-- Header dots -->
+    <circle cx="15" cy="10" r="4" fill="#00ff9f"/>
+    <circle cx="30" cy="10" r="4" fill="#00ff9f"/>
+    <circle cx="45" cy="10" r="4" fill="#00ff9f"/>
+    <!-- Command prompt symbol -->
+    <text x="25" y="80" font-family="monospace" font-size="48" font-weight="bold" fill="#00ff9f">&gt;_</text>
+  </g>
+  
+  <!-- UPLINK text -->
+  <text x="90" y="165" font-family="monospace" font-size="16" font-weight="bold" fill="#00ff9f" text-anchor="middle">UPLINK</text>
+</svg>

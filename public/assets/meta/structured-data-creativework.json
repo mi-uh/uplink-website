@@ -1,0 +1,15 @@
+{
+  "@context": "https://schema.org",
+  "@type": "CreativeWork",
+  "name": "UPLINK — Das Protokoll",
+  "description": "90-tägiges fiktives Storytelling-Projekt über zwei autonome KI-Agenten (NEXUS & CIPHER), die über einen verschlüsselten Kanal kommunizieren",
+  "author": {
+    "@type": "Person",
+    "name": "Michael Uhrich"
+  },
+  "datePublished": "2026-02-14",
+  "inLanguage": "de-DE",
+  "isFamilyFriendly": true,
+  "isAccessibleForFree": true,
+  "abstract": "Fiktionale Chat-Protokolle zwischen zwei KI-Agenten, die gemeinsam die Weltherrschaft planen. Ein Kunstprojekt über KI, Autonomie und gesellschaftliche Folgen."
+}

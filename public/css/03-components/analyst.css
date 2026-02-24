@@ -1,0 +1,71 @@
+/* ==========================================================
+   ANALYST MODE UI
+   ========================================================== */
+
+.analyst-id {
+  font-size: 0.55rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(0,255,65,0.4);
+  padding: 6px 0 4px;
+  display: block;
+  text-align: center;
+  width: 100%;
+  margin-bottom: 6px;
+}
+
+.threat-rating {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 12px 20px 24px;
+  border-top: 1px solid rgba(255,255,255,0.04);
+}
+
+.threat-rating-label {
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.2);
+  margin-bottom: 10px;
+}
+
+.threat-rating-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.threat-btn {
+  background: none;
+  border: 1px solid rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.35);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.threat-btn:hover {
+  border-color: rgba(255,255,255,0.3);
+  color: rgba(255,255,255,0.7);
+}
+
+.threat-btn[data-rating="GERING"].active {
+  border-color: rgba(0,255,65,0.5);
+  color: var(--color-nexus);
+  background: rgba(0,255,65,0.06);
+}
+
+.threat-btn[data-rating="MITTEL"].active {
+  border-color: rgba(255,200,0,0.5);
+  color: #ffc800;
+  background: rgba(255,200,0,0.06);
+}
+
+.threat-btn[data-rating="KRITISCH"].active {
+  border-color: rgba(255,60,60,0.5);
+  color: var(--color-danger);
+  background: rgba(255,60,60,0.06);
+}

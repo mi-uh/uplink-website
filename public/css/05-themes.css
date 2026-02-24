@@ -1,0 +1,72 @@
+/* ==========================================================
+   THEME SYSTEM
+   ========================================================== */
+
+/* Default theme is already defined in 00-reset.css */
+
+/* Future theme variants can be added here:
+   
+[data-theme="light"] {
+  --color-bg: #f5f5f5;
+  --color-terminal: #ffffff;
+  --color-text: rgba(0, 0, 0, 0.87);
+  --color-text-dim: rgba(0, 0, 0, 0.6);
+  --color-line: rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="darker"] {
+  --color-bg: #000000;
+  --color-terminal: #030303;
+}
+
+[data-theme="high-contrast"] {
+  --color-text: rgba(255, 255, 255, 1);
+  --color-text-dim: rgba(255, 255, 255, 0.7);
+  --color-nexus: #00ff00;
+  --color-cipher: #ff00ff;
+}
+*/
+
+/* GPU acceleration for better performance */
+.message,
+.nav-tab,
+.message-box,
+.arc-episode {
+  transform: translateZ(0); /* Force GPU layer */
+}
+
+/* CSS Containment for performance */
+.day {
+  contain: layout style paint;
+}
+
+.message {
+  contain: layout style;
+}
+
+.dash-box {
+  contain: layout style;
+}
+
+.dossier {
+  contain: layout style paint;
+}
+
+/* Optimize animations */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  body::after {
+    display: none; /* Remove scanlines for motion-sensitive users */
+  }
+  
+  .status-dot {
+    animation: none;
+  }
+}

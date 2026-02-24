@@ -1,0 +1,53 @@
+/* ==========================================================
+   EFFECTS & ANIMATIONS
+   ========================================================== */
+
+/* Message fade-in animation */
+.message {
+    opacity: 0;
+    animation: fadeIn 0.3s ease forwards;
+    animation-delay: calc(var(--i, 0) * 0.05s);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+        filter: brightness(2);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+        filter: brightness(1);
+    }
+}
+
+/* Arc pulse animation (already included in dashboard.css but kept here for reference) */
+@keyframes arcPulse {
+    0%, 100% {
+        width: 30%;
+        opacity: 0.6;
+    }
+    50% {
+        width: 60%;
+        opacity: 1;
+    }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--color-bg);
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(0, 255, 65, 0.15);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 255, 65, 0.30);
+}

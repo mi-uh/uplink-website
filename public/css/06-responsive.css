@@ -1,0 +1,176 @@
+/* ==========================================================
+   RESPONSIVE / MOBILE STYLES
+   ========================================================== */
+
+@media (max-width: 600px) {
+    /* Site header */
+    .site-header {
+        padding: 16px 16px 14px;
+    }
+
+    .site-header::before {
+        font-size: 0.5rem;
+        letter-spacing: 0.08em;
+        margin-bottom: 10px;
+    }
+
+    .site-title {
+        font-size: 1.6rem;
+    }
+
+    .site-subtitle {
+        font-size: 0.6rem;
+    }
+
+    /* Navigation */
+    .nav-tabs {
+        justify-content: flex-start;
+        padding: 0 8px;
+    }
+
+    .nav-tab {
+        padding: 10px 10px;
+        font-size: 0.6rem;
+        letter-spacing: 0.06em;
+    }
+
+    .status-bar {
+        gap: 12px;
+        font-size: 0.6rem;
+    }
+
+    /* Dashboard */
+    .dashboard {
+        padding: 16px 12px 0;
+    }
+
+    .dash-bar-label {
+        width: 90px;
+        font-size: 0.6rem;
+    }
+
+    .dash-bar-value {
+        font-size: 0.6rem;
+    }
+
+    .dash-bar-delta {
+        display: none;
+    }
+
+    .dash-metrics {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .dash-metric:nth-child(2n) {
+        border-right: none;
+    }
+
+    .dash-metric-value {
+        font-size: 1.1rem;
+    }
+
+    /* Timeline */
+    .timeline {
+        padding: 0 10px 40px;
+    }
+
+    .message {
+        max-width: 90%;
+        gap: 8px;
+    }
+
+    .message-box {
+        padding: 8px 10px;
+    }
+
+    .message-system {
+        padding: 8px 10px;
+    }
+
+    .message-avatar {
+        width: 28px;
+        height: 28px;
+    }
+
+    .message-timestamp {
+        display: inline-block;
+        opacity: 0.7;
+    }
+
+    /* CIPHER: Name rechts, Uhrzeit links (spiegelverkehrt zu Nexus) */
+    .message-cipher .message-header {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .message-cipher .message-timestamp {
+        order: 1;
+        margin-right: auto;
+        text-align: left;
+    }
+
+    .message-cipher .message-author {
+        order: 2;
+        text-align: right;
+        margin-left: auto;
+    }
+
+    .terminal-block {
+        padding: 10px 12px;
+        font-size: 0.6rem;
+    }
+
+    .terminal-block-wrap {
+        max-width: 90%;
+    }
+
+    .terminal-block-wrap.owner-nexus {
+        margin-left: 36px;
+    }
+
+    .terminal-block-wrap.owner-cipher {
+        margin-right: 36px;
+    }
+
+    .episode-context {
+        padding: 6px 0 10px;
+    }
+
+    .day-header {
+        flex-wrap: wrap;
+        gap: 4px 12px;
+    }
+
+    .day-line {
+        display: none;
+    }
+
+    /* Dossiers */
+    .dossier-avatar-row {
+        gap: 12px;
+    }
+
+    .dossier-avatar {
+        width: 44px;
+        height: 44px;
+    }
+
+    .dossier-name {
+        font-size: 1.2rem;
+    }
+
+    .dossier-skill-name {
+        width: 100px;
+        font-size: 0.6rem;
+    }
+
+    .dossier-field {
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .dossier-field-label {
+        width: auto;
+    }
+}

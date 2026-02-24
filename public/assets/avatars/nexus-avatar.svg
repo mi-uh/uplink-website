@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">NEXUS Avatar</title>
+  <desc id="desc">Infrastructure-Hacker: maskierter Operator vor Code-Regen und Schaltkreisen, neon-grün</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#050d08"/>
+      <stop offset="100%" stop-color="#0d1d12"/>
+    </linearGradient>
+    <linearGradient id="visor" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00ff65"/>
+      <stop offset="100%" stop-color="#7bffb5"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="50%" cy="38%" r="60%">
+      <stop offset="0%" stop-color="#00ff65" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#00ff65" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <rect width="512" height="512" fill="url(#halo)"/>
+
+  <!-- code rain -->
+  <g fill="#0f3b23" font-family="Menlo, monospace" font-size="18" opacity="0.55">
+    <text x="60" y="90">10110</text><text x="120" y="140">0110</text><text x="340" y="90">1101</text>
+    <text x="410" y="160">010</text><text x="240" y="120">01101</text><text x="180" y="70">1100</text>
+    <text x="70" y="240">00110</text><text x="320" y="230">1110</text><text x="260" y="320">0101</text>
+  </g>
+
+  <!-- circuit frame -->
+  <g stroke="#0f2d16" stroke-width="3" fill="none" opacity="0.8">
+    <rect x="70" y="70" width="372" height="372" rx="30"/>
+    <path d="M70 180h40m292 0h40M70 330h40m292 0h40"/>
+    <path d="M140 70v40m0 292v40M372 70v40m0 292v40"/>
+  </g>
+
+  <!-- hooded silhouette -->
+  <path d="M156 180c0-28 26-56 70-74l30-12 30 12c44 18 70 46 70 74v72c0 56-36 112-100 146-64-34-100-90-100-146z"
+        fill="none" stroke="url(#visor)" stroke-width="10" stroke-linejoin="round"/>
+
+  <!-- visor -->
+  <rect x="166" y="230" width="180" height="70" rx="12" fill="rgba(0,255,101,0.12)" stroke="url(#visor)" stroke-width="8"/>
+  <circle cx="210" cy="265" r="16" fill="#00ff65"/>
+  <circle cx="302" cy="265" r="16" fill="#00ff65"/>
+  <rect x="234" y="258" width="44" height="14" rx="6" fill="#00ff65"/>
+
+  <!-- mouth / voice scrambler -->
+  <rect x="214" y="320" width="84" height="26" rx="10" fill="none" stroke="url(#visor)" stroke-width="7" stroke-dasharray="10 8"/>
+
+  <!-- LAN jack + circuit traces -->
+  <g stroke="#00ff65" stroke-width="6" stroke-linecap="round">
+    <rect x="238" y="146" width="36" height="26" rx="4" fill="none"/>
+    <path d="M256 172v28"/>
+    <path d="M190 156l-20-22"/>
+    <path d="M322 156l20-22"/>
+    <path d="M176 348l-28 34"/>
+    <path d="M336 348l28 34"/>
+  </g>
+</svg>

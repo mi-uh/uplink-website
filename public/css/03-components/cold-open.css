@@ -1,0 +1,94 @@
+/* ==========================================================
+   COLD OPEN OVERLAY (Erstbesucher)
+   ========================================================== */
+
+.cold-open {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+  transition: opacity 0.6s ease;
+}
+
+.cold-open.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.cold-open-screen {
+  max-width: 640px;
+  width: 100%;
+  padding: 40px 20px;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  line-height: 2;
+  color: var(--color-text-dim);
+}
+
+.cold-open-line {
+  opacity: 0;
+  display: block;
+  transition: opacity 0.15s ease;
+}
+
+.cold-open-line.visible {
+  opacity: 1;
+}
+
+.cold-open-line.nexus { color: var(--color-nexus); }
+.cold-open-line.cipher { color: var(--color-cipher); }
+.cold-open-line.system { color: rgba(255,255,100,0.7); }
+.cold-open-line.dim { color: rgba(255,255,255,0.2); font-size: 0.65rem; }
+
+.cold-open-enter {
+  display: none;
+  margin-top: 32px;
+  background: none;
+  border: 1px solid var(--color-nexus);
+  color: var(--color-nexus);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 14px 28px;
+  cursor: pointer;
+  animation: pulseGlow 1.5s ease-in-out infinite;
+}
+
+.cold-open-enter.is-visible {
+  display: block;
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 8px rgba(0,255,65,0.3); }
+  50%       { box-shadow: 0 0 20px rgba(0,255,65,0.6); }
+}
+
+.cold-open-enter:hover {
+  background: var(--color-nexus);
+  color: #000;
+}
+
+.cold-open-skip {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+}
+
+.cold-open-skip button {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.2);
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  text-transform: uppercase;
+}
+
+.cold-open-skip button:hover { color: rgba(255,255,255,0.5); }

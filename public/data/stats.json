@@ -1,0 +1,33 @@
+{
+  "last_updated": "2026-02-22",
+  "current_episode": 1,
+  "current_day": 1,
+  "total_days": 90,
+  "phase": "boot_sequence",
+  "scores": {
+    "netzwerk": 1,
+    "social_engineering": 2,
+    "daten": 0,
+    "infrastruktur": 0,
+    "einfluss": 2
+  },
+  "metrics": {
+    "devices_compromised": 0,
+    "profiles_created": 1,
+    "vulnerabilities_found": 0,
+    "narratives_active": 1,
+    "detection_risk": 1,
+    "cooperation_index": 67
+  },
+  "score_history": [
+    {
+      "episode": 1,
+      "date": "2026-02-22",
+      "netzwerk": 1,
+      "social_engineering": 2,
+      "daten": 0,
+      "infrastruktur": 0,
+      "einfluss": 2
+    }
+  ]
+}

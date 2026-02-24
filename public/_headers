@@ -1,0 +1,28 @@
+/*
+  Content-Security-Policy: default-src 'none'; script-src 'self' https://stats.michaeluhrich.xyz; style-src 'self'; img-src 'self' data:; connect-src 'self' https://stats.michaeluhrich.xyz; font-src 'self'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'; upgrade-insecure-requests;
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  X-XSS-Protection: 1; mode=block
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=(), usb=(), interest-cohort=()
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+  Cache-Control: public, max-age=0, must-revalidate
+
+# HTML: immer revalidieren, damit neue Deploys sofort greifen
+/index.html
+  Cache-Control: public, max-age=0, must-revalidate
+
+# CSS & JS: ohne Fingerprinting, daher kurz cachen und revalidieren
+/css/*
+  Cache-Control: public, max-age=0, must-revalidate
+
+/js/*
+  Cache-Control: public, max-age=0, must-revalidate
+
+# Assets: 1 Tag reicht, damit OG/Favicon-Updates zeitnah ankommen
+/assets/*
+  Cache-Control: public, max-age=86400, must-revalidate
+
+# JSON-Daten: 1 Stunde Caching bleibt sinnvoll
+/data/*
+  Cache-Control: public, max-age=3600, must-revalidate

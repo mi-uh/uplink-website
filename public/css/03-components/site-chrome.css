@@ -1,0 +1,364 @@
+/* ==========================================================
+   SITE CHROME — Unified Header
+   ==========================================================
+
+   Struktur (von oben nach unten):
+   1. Topbar        — ← michaeluhrich.xyz | CLASSIFICATION: OMEGA
+   2. Identity      — UPLINK (H1, zentriert, groß)
+   3. Separator     — schmaler Gradient-Balken
+   4. Briefing      — Tagline + CTAs (zentriert)
+   5. Status-Strip  — Terminal-Zeile: S1 | Kanal | Episode | Phase | Tag
+   6. Disclaimer    — klein, rot
+
+   ========================================================== */
+
+/* ---- Gesamter Header-Block ---- */
+.site-header {
+  padding: 0;
+  background:
+    radial-gradient(140% 120% at 10% 0%, rgba(0, 255, 65, 0.12) 0%, transparent 55%),
+    radial-gradient(120% 140% at 90% 0%, rgba(191, 64, 255, 0.16) 0%, transparent 50%),
+    #050505;
+  border-bottom: 1px solid var(--color-line);
+  position: relative;
+}
+
+/* Gradient-Linie am unteren Header-Rand — leitet visuell zur Nav über */
+.site-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(0, 255, 65, 0.18) 30%,
+    rgba(191, 64, 255, 0.18) 70%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+/* ---- Topbar ---- */
+.site-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.site-back {
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-dim);
+  text-decoration: none;
+  transition: color var(--transition-base);
+}
+
+.site-back:hover {
+  color: var(--color-text);
+}
+
+.site-classification {
+  font-size: 0.65rem;
+  color: rgba(0, 255, 65, 0.4);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+/* ---- Site Title ---- */
+.site-identity {
+  text-align: center;
+  padding: 40px 24px 22px;
+}
+
+.site-title {
+  font-size: clamp(2.5rem, 7vw + 1rem, 5rem);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  margin: 0;
+  line-height: 1;
+  color: var(--color-text);
+  text-shadow:
+    0 0 40px rgba(0, 255, 65, 0.2),
+    0 0 80px rgba(191, 64, 255, 0.1);
+}
+
+.site-title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Schmaler Gradient-Balken als visueller Brücke zwischen Titel und Copy */
+.site-identity::after {
+  content: '';
+  display: block;
+  width: 48px;
+  height: 1px;
+  margin: 20px auto 0;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 255, 65, 0.5),
+    rgba(191, 64, 255, 0.5)
+  );
+}
+
+/* ---- Briefing: vollzentrierter Block ---- */
+.site-briefing {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 22px 24px 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+/* ---- Copy-Block ---- */
+.site-briefing-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.site-lead {
+  color: var(--color-text);
+  line-height: 1.65;
+  margin: 0 0 20px;
+  font-size: var(--font-size-base);
+  text-align: center;
+  max-width: 460px;
+}
+
+.site-ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---- CTAs ---- */
+.cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 20px;
+  border: 1px solid var(--color-nexus);
+  color: #000;
+  background: var(--color-nexus);
+  text-decoration: none;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition:
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast),
+    opacity var(--transition-fast);
+}
+
+.cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(0, 255, 65, 0.3);
+  color: #000;
+}
+
+.cta.secondary {
+  background: transparent;
+  color: var(--color-text);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.cta.secondary:hover {
+  border-color: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 6px 18px rgba(255, 255, 255, 0.08);
+}
+
+.cta.tertiary {
+  font-size: 0.72rem;
+  opacity: 0.8;
+  border-color: transparent;
+  background: transparent;
+  color: var(--color-text-dim);
+  padding: 11px 8px;
+  letter-spacing: 0.06em;
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 255, 255, 0.15);
+  text-underline-offset: 3px;
+}
+
+.cta.tertiary:hover {
+  opacity: 1;
+  color: var(--color-text);
+  text-decoration-color: rgba(255, 255, 255, 0.4);
+  box-shadow: none;
+  transform: none;
+}
+
+/* ---- Status-Strip: horizontale Terminal-Zeile ---- */
+.site-status-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border: 1px solid var(--color-line);
+  border-left: 2px solid rgba(0, 255, 65, 0.3);
+  width: 100%;
+  max-width: 640px;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.status-label {
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.08em;
+  color: var(--color-nexus);
+  text-transform: uppercase;
+}
+
+.status-sep {
+  display: inline-block;
+  width: 1px;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  flex-shrink: 0;
+}
+
+.site-status-bar .meta-key {
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(224, 224, 224, 0.3);
+  white-space: nowrap;
+  text-align: center;
+}
+
+.site-status-bar .meta-value {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-dim);
+  white-space: nowrap;
+  font-weight: normal;
+  text-align: center;
+}
+
+/* Episode-Value truncaten — Titel kann sehr lang sein */
+.episode-val {
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* ---- Disclaimer ---- */
+.site-disclaimer {
+  display: inline-block;
+  font-size: 0.65rem;
+  color: rgba(255, 60, 60, 0.4);
+  border: 1px solid rgba(255, 60, 60, 0.1);
+  padding: 3px 8px;
+  border-radius: 2px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  width: fit-content;
+}
+
+.page-anchor {
+  display: block;
+  height: 0;
+  width: 100%;
+}
+
+/* ---- Footer ---- */
+.site-footer {
+  text-align: center;
+  padding: 24px 20px;
+  border-top: 1px solid var(--color-line);
+  font-size: 0.7rem;
+  color: var(--color-text-dim);
+  letter-spacing: 0.05em;
+  line-height: 1.8;
+}
+
+.site-footer a {
+  color: var(--color-text-dim);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  transition: color var(--transition-base);
+}
+
+.site-footer a:hover {
+  color: var(--color-text);
+}
+
+.site-footer::before {
+  content: '--- END TRANSMISSION ---';
+  display: block;
+  margin-bottom: 12px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.15);
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 900px) {
+  .site-briefing {
+    padding: 18px 20px 28px;
+    gap: 14px;
+  }
+
+  .site-classification {
+    display: none;
+  }
+}
+
+@media (max-width: 540px) {
+  .site-identity {
+    padding: 24px 16px 14px;
+  }
+
+  .site-title {
+    font-size: clamp(2rem, 10vw, 3rem);
+    letter-spacing: 0.08em;
+  }
+
+  .site-ctas {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .cta {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .cta.tertiary {
+    text-align: center;
+    padding: 8px;
+  }
+
+  .site-status-bar {
+    gap: 6px;
+    padding: 8px 12px;
+  }
+
+  /* Trennlinien auf Mobile ausblenden — zu viel visuelles Rauschen */
+  .status-sep {
+    display: none;
+  }
+
+  .site-status-bar .meta-key,
+  .site-status-bar .meta-value,
+  .status-label {
+    font-size: 0.6rem;
+  }
+}

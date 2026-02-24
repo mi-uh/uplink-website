@@ -1,0 +1,61 @@
+# Claude Code (lokale IDE-Einstellungen)
+.claude/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+.cache/
+
+# Node (if ever needed for dev tools)
+node_modules/
+package-lock.json
+
+# Security: Environment variables & secrets
+.env
+.env.*
+*.env
+.env.local
+.env.production
+secrets.*
+config.local.*
+
+# Security: API keys & credentials
+*_key.txt
+*_secret.txt
+credentials.*
+auth.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+.venv/
+env/
+ENV/
+
+# Backup files
+*.backup
+*.bak
+*~
+
+# Notes
+docs/
+AGENTS.md
+
+# Deploy secrets (Template .env.example ist erlaubt, echte .env nicht)
+.deploy/.env

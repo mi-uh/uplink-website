@@ -1,0 +1,270 @@
+/* ==========================================================
+   DASHBOARD COMPONENT
+   ========================================================== */
+
+/* Dashboard container */
+.dashboard {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 24px 20px 0;
+}
+
+/* Dashboard box wrapper */
+.dash-box {
+    border: 1px solid rgba(0, 255, 65, 0.20);
+    border-radius: 2px;
+    background: rgba(0, 255, 65, 0.02);
+    overflow: hidden;
+    box-shadow:
+        0 0 0 1px rgba(0, 255, 65, 0.04),
+        0 4px 24px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(0, 255, 65, 0.06);
+}
+
+/* Dashboard header */
+.dash-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    border-bottom: 1px solid rgba(0, 255, 65, 0.08);
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.dash-header-title {
+    color: var(--color-nexus);
+    font-weight: 700;
+}
+
+.dash-header-meta {
+    color: var(--color-text-dim);
+    font-size: 0.6rem;
+}
+
+.dash-countdown {
+    font-size: 0.65rem;
+    color: rgba(0,255,65,0.5);
+    letter-spacing: 0.06em;
+}
+
+/* Dashboard bar section */
+.dash-bars {
+    padding: 14px 16px 10px;
+}
+
+/* Bar row */
+.dash-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 0.7rem;
+}
+
+.dash-bar-label {
+    width: 130px;
+    flex-shrink: 0;
+    color: var(--color-text-dim);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dash-bar-track {
+    flex: 1;
+    height: 12px;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 1px;
+    overflow: hidden;
+    position: relative;
+}
+
+.dash-bar-fill {
+    height: 100%;
+    border-radius: 1px;
+    transition: width 0.8s ease;
+    position: relative;
+}
+
+.dash-bar-fill.nexus {
+    background: rgba(0, 255, 65, 0.5);
+    box-shadow: 0 0 8px rgba(0, 255, 65, 0.2);
+}
+
+.dash-bar-fill.cipher {
+    background: rgba(191, 64, 255, 0.5);
+    box-shadow: 0 0 8px rgba(191, 64, 255, 0.2);
+}
+
+.dash-bar-fill.mixed {
+    background: linear-gradient(90deg, rgba(0, 255, 65, 0.5), rgba(191, 64, 255, 0.5));
+}
+
+.dash-bar-fill.warn {
+    background: rgba(255, 200, 0, 0.5);
+}
+
+.dash-bar-fill.danger {
+    background: rgba(255, 60, 60, 0.5);
+}
+
+.dash-bar-value {
+    width: 36px;
+    text-align: right;
+    color: var(--color-text);
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.dash-bar-delta {
+    width: 40px;
+    text-align: right;
+    font-size: 0.6rem;
+    flex-shrink: 0;
+    color: rgba(0, 255, 65, 0.6);
+}
+
+/* Dashboard metrics grid */
+.dash-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border-top: 1px solid rgba(0, 255, 65, 0.08);
+}
+
+.dash-metric {
+    padding: 10px 16px;
+    text-align: center;
+    border-right: 1px solid rgba(0, 255, 65, 0.06);
+    border-bottom: 1px solid rgba(0, 255, 65, 0.06);
+}
+
+.dash-metric:nth-child(3n) {
+    border-right: none;
+}
+
+.dash-metric:nth-last-child(-n+3) {
+    border-bottom: none;
+}
+
+.dash-metric-value {
+    display: block;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--color-nexus);
+    margin-bottom: 2px;
+}
+
+.dash-metric-value.warn {
+    color: rgba(255, 200, 0, 0.8);
+}
+
+.dash-metric-value.good {
+    color: var(--color-nexus);
+}
+
+.dash-metric-label {
+    display: block;
+    font-size: 0.55rem;
+    color: var(--color-text-dim);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+/* Dashboard arc progress */
+.dash-arc {
+    padding: 10px 16px;
+    border-top: 1px solid rgba(0, 255, 65, 0.08);
+    display: flex;
+    gap: 2px;
+    align-items: center;
+}
+
+.dash-arc-phase {
+    flex: 1;
+    height: 4px;
+    border-radius: 1px;
+    background: rgba(255, 255, 255, 0.06);
+    position: relative;
+}
+
+.dash-arc-phase.completed {
+    background: rgba(0, 255, 65, 0.3);
+}
+
+.dash-arc-phase.current {
+    background: rgba(0, 255, 65, 0.15);
+    position: relative;
+    overflow: hidden;
+}
+
+.dash-arc-phase.current::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    background: var(--color-nexus);
+    animation: arcPulse 2s ease-in-out infinite;
+}
+
+@keyframes arcPulse {
+    0%, 100% {
+        width: 30%;
+        opacity: 0.6;
+    }
+    50% {
+        width: 60%;
+        opacity: 1;
+    }
+}
+
+.dash-arc-label {
+    font-size: 0.55rem;
+    color: var(--color-text-dim);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-left: 8px;
+    white-space: nowrap;
+}
+
+/* Score history sparkline */
+.dash-sparkline {
+    padding: 12px 16px;
+    border-top: 1px solid rgba(0, 255, 65, 0.08);
+}
+
+.dash-sparkline-title {
+    font-size: 0.55rem;
+    color: var(--color-text-dim);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+}
+
+.dash-sparkline svg {
+    display: block;
+    width: 100%;
+}
+
+.dash-sparkline-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    margin-top: 6px;
+    font-size: 0.5rem;
+    color: var(--color-text-dim);
+    letter-spacing: 0.04em;
+}
+
+.dash-sparkline-legend span::before {
+    content: '';
+    display: inline-block;
+    width: 10px;
+    height: 2px;
+    margin-right: 4px;
+    vertical-align: middle;
+}

@@ -1,0 +1,77 @@
+/* ==========================================================
+   RESET + CSS VARIABLES
+   ========================================================== */
+
+/* Box-sizing reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* CSS Custom Properties (Theme Variables) */
+:root {
+  /* Background colors */
+  --color-bg: #050505;
+  --color-terminal: #0a0c0a;
+  
+  /* Brand colors */
+  --color-nexus: #00ff41;
+  --color-nexus-dim: rgba(0, 255, 65, 0.06);
+  --color-cipher: #bf40ff;
+  --color-cipher-dim: rgba(191, 64, 255, 0.06);
+  --color-system: rgba(255, 200, 0, 0.5);
+  --color-system-dim: rgba(255, 200, 0, 0.04);
+  
+  /* Text colors (WCAG 2.1 AA compliant) */
+  --color-text: rgba(255, 255, 255, 0.92);      /* Improved from 0.78 */
+  --color-text-dim: rgba(255, 255, 255, 0.55);  /* Improved from 0.3 */
+  --color-line: rgba(255, 255, 255, 0.06);
+  
+  /* Status colors */
+  --color-danger: rgba(255, 60, 60, 0.8);
+  --color-amber: rgba(255, 200, 0, 0.7);
+  
+  /* Typography */
+  --font-mono: "SF Mono", "Fira Code", Menlo, Consolas, "Courier New", monospace;
+  --font-size-base: 14px;
+  --line-height-base: 1.7;
+  
+  /* Spacing scale */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  
+  /* Animation timing */
+  --transition-fast: 0.15s;
+  --transition-base: 0.2s;
+  --transition-slow: 0.3s;
+  
+  /* Z-index layers */
+  --z-scanlines: 9999;
+  --z-loading: 10000;
+  --z-modal: 10001;
+}
+
+/* Selection color */
+::selection {
+  background: rgba(0, 255, 65, 0.25);
+  color: #fff;
+}
+
+/* Focus outline (accessibility) */
+*:focus {
+  outline: 2px solid var(--color-nexus);
+  outline-offset: 2px;
+}
+
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--color-nexus);
+  outline-offset: 2px;
+}

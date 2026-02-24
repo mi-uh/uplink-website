@@ -1,0 +1,134 @@
+/* ==========================================================
+   ARCHIVE COMPONENT
+   ========================================================== */
+
+/* Archive container */
+.archive {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 24px 20px 60px;
+}
+
+/* Archive phase */
+.arc-phase {
+    margin-bottom: 32px;
+    border: 1px solid var(--color-line);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+/* Archive phase header */
+.arc-phase-header {
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--color-line);
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.arc-phase-header:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.arc-phase-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-nexus);
+}
+
+.arc-phase.locked .arc-phase-title {
+    color: var(--color-text-dim);
+}
+
+.arc-phase-meta {
+    font-size: 0.6rem;
+    color: var(--color-text-dim);
+    letter-spacing: 0.06em;
+}
+
+.arc-phase-tag {
+    font-size: 0.55rem;
+    padding: 2px 8px;
+    border-radius: 2px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.arc-phase-tag.active {
+    color: var(--color-nexus);
+    border: 1px solid rgba(0, 255, 65, 0.3);
+}
+
+.arc-phase-tag.locked {
+    color: var(--color-text-dim);
+    border: 1px solid var(--color-line);
+}
+
+.arc-phase-tag.completed {
+    color: rgba(0, 255, 65, 0.5);
+    border: 1px solid rgba(0, 255, 65, 0.15);
+}
+
+/* Archive episodes list */
+.arc-episodes {
+    padding: 0;
+}
+
+.arc-episode {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--color-line);
+    cursor: pointer;
+    transition: background 0.2s;
+    /* button reset */
+    appearance: none;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    font-family: inherit;
+    font-size: inherit;
+    color: inherit;
+    text-align: left;
+    width: 100%;
+}
+
+.arc-episode:last-child {
+    border-bottom: none;
+}
+
+.arc-episode:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.arc-ep-num {
+    font-size: 0.7rem;
+    color: var(--color-nexus);
+    font-weight: 700;
+    width: 56px;
+    flex-shrink: 0;
+}
+
+.arc-ep-title {
+    font-size: 0.75rem;
+    color: var(--color-text);
+    flex: 1;
+}
+
+.arc-ep-date {
+    font-size: 0.6rem;
+    color: var(--color-text-dim);
+}
+
+.arc-ep-preview {
+    font-size: 0.65rem;
+    color: var(--color-text-dim);
+    margin-top: 4px;
+    line-height: 1.5;
+}

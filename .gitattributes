@@ -1,0 +1,5 @@
+# All text files: Safe LF in repo
+* text=auto eol=lf
+
+# Windows specific
+*.bat text eol=crlf
