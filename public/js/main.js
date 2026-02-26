@@ -29,6 +29,7 @@ const AppState = {
 };
 
 const ANALYST_KEY = 'uplink_analyst_id';
+const MAINT_SESSION_PREFIX = 'uplink_maintenance_';
 
 function getAnalystId() {
   let id = localStorage.getItem(ANALYST_KEY);
@@ -887,9 +888,6 @@ function handleRoute() {
    DATA LOADING
    ========================================================== */
 
-/**
- * Load all data and initialize app
- */
 let formFieldCounter = 0;
 
 function assignIdAndName(el) {
@@ -907,57 +905,176 @@ function assignIdAndName(el) {
   }
 }
 
-async function loadAll() {
-  try {
+/**
+ * Hash helper for maintenance passphrase (SHA-256)
+ */
+async function hashSHA256(input) {
+  if (!crypto?.subtle) {
+    throw new Error('HTTPS_REQUIRED');
+  }
+  const enc = new TextEncoder().encode(input);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', enc);
+  return Array.from(new Uint8Array(hashBuffer))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+/**
+ * Show maintenance gate if enabled in config
+ * @param {Object} config - App configuration
+ * @returns {Promise<boolean>} True if gate is active (app loading paused)
+ */
+async function enforceMaintenanceGate(config) {
+  const settings = config?.maintenance;
+  if (!settings?.enabled) return false;
+
+  const expectedHash = (settings.passphrase_sha256 || '').trim().toLowerCase();
+  const sessionKey = `${MAINT_SESSION_PREFIX}${expectedHash || 'open'}`;
+  const stored = sessionStorage.getItem(sessionKey);
+
+  if (stored && stored === (expectedHash || 'open')) {
+    return false;
+  }
+
+  hideLoading();
+  document.body.classList.add('maintenance-active');
+
+  const requirePassword = !!expectedHash;
+  const overlay = document.createElement('div');
+  overlay.className = 'maintenance-overlay';
+
+  const message = settings.message || 'Wartungsmodus aktiv. Bitte sp\u00e4ter erneut versuchen.';
+  const hint = settings.passphrase_hint ? `<p class=\"maintenance-hint\">${escapeHtml(settings.passphrase_hint)}</p>` : '';
+
+  overlay.innerHTML = `
+    <div class="maintenance-panel" role="dialog" aria-modal="true" aria-labelledby="maintenance-title" aria-describedby="maintenance-copy">
+      <div class="maintenance-badge">WARTUNG</div>
+      <h2 id="maintenance-title">Wartungsmodus aktiv</h2>
+      <p id="maintenance-copy">${escapeHtml(message)}</p>
+      ${requirePassword ? `
+        <form id="maintenance-form" class="maintenance-form">
+          <label for="maintenance-pass">Zugangscode</label>
+          <div class="maintenance-input-row">
+            <input id="maintenance-pass" name="maintenance-pass" type="password" autocomplete="off" inputmode="text" required aria-required="true" />
+            <button type="submit" id="maintenance-submit" class="maintenance-btn">Freischalten</button>
+          </div>
+          ${hint}
+          <p class="maintenance-note">Nur temporärer Zugang für Betreiber. Öffentliche Auslieferung pausiert.</p>
+          <div class="maintenance-error" role="alert" aria-live="assertive"></div>
+        </form>
+      ` : `
+        <div class="maintenance-form">
+          ${hint || '<p class="maintenance-note">Kein Zugangscode gesetzt.</p>'}
+          <button id="maintenance-submit" class="maintenance-btn">Weiter</button>
+        </div>
+      `}
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  const form = overlay.querySelector('#maintenance-form');
+  const submitBtn = overlay.querySelector('#maintenance-submit');
+  const input = overlay.querySelector('#maintenance-pass');
+  const errorEl = overlay.querySelector('.maintenance-error');
+
+  const unlock = async () => {
+    sessionStorage.setItem(sessionKey, expectedHash || 'open');
+    overlay.classList.add('closing');
+    setTimeout(() => overlay.remove(), 200);
+    document.body.classList.remove('maintenance-active');
     showLoading();
-    
-    console.log('%c[UPLINK]%c Loading data...', 'color:#00ff41;font-weight:bold', 'color:inherit');
-    
-    // Load all data in parallel
-    const [episodes, stats, config] = await Promise.all([
-      EpisodeService.getAllEpisodes(),
-      StatsService.getStats(),
-      StatsService.getConfig()
-    ]);
-    
-    console.log('%c[UPLINK]%c Data loaded:', 'color:#00ff41;font-weight:bold', 'color:inherit', {
-      episodes: episodes.length,
-      stats,
-      config
+    try {
+      await loadAppDataAndRender();
+    } catch (error) {
+      handleLoadError(error);
+    }
+  };
+
+  if (requirePassword && form) {
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (!submitBtn) return;
+      submitBtn.disabled = true;
+      errorEl && (errorEl.textContent = '');
+      try {
+        const entered = input?.value?.trim() || '';
+        if (!entered) {
+          errorEl && (errorEl.textContent = 'Passwort fehlt.');
+          submitBtn.disabled = false;
+          input?.focus();
+          return;
+        }
+        const hashed = await hashSHA256(entered);
+        if (hashed !== expectedHash) {
+          errorEl && (errorEl.textContent = 'Falsches Passwort.');
+          submitBtn.disabled = false;
+          input?.focus();
+          input?.select();
+          return;
+        }
+        await unlock();
+      } catch (err) {
+        console.error('Maintenance gate error', err);
+        const msg = err.message === 'HTTPS_REQUIRED'
+          ? 'Nur über HTTPS verfügbar.'
+          : 'Unerwarteter Fehler. Bitte erneut versuchen.';
+        errorEl && (errorEl.textContent = msg);
+        submitBtn.disabled = false;
+      }
     });
-    
-    // Update app state
-    AppState.episodes = episodes;
-    AppState.stats = stats;
-    AppState.config = config;
-    
-    console.log('%c[UPLINK]%c Rendering pages...', 'color:#00ff41;font-weight:bold', 'color:inherit');
-    
-    // Render all pages
-    renderDashboard();
-    renderLandingMeta();
-    initCountdown();
-    renderLiveEpisode();
-    renderFullTimeline();
-    renderArchive();
-    renderDossiers();
-    ensureFormFieldIdentifiers();
-    
-    // Handle initial route
-    handleRoute();
-    
-    hideLoading();
-    
-    console.log('%c[UPLINK]%c System ready!', 'color:#00ff41;font-weight:bold', 'color:inherit');
-    
-    // Emit ready event
-    EventBus.emit('app:ready');
-    
-  } catch (error) {
-    console.error('%c[UPLINK]%c Failed to load data:', 'color:#ff4757;font-weight:bold', 'color:inherit', error);
-    hideLoading();
-    
-    document.body.innerHTML = `
+  } else if (submitBtn) {
+    submitBtn.addEventListener('click', async () => {
+      await unlock();
+    });
+  }
+
+  input?.focus();
+  return true;
+}
+
+async function loadAppDataAndRender() {
+  console.log('%c[UPLINK]%c Loading data...', 'color:#00ff41;font-weight:bold', 'color:inherit');
+
+  const [episodes, stats] = await Promise.all([
+    EpisodeService.getAllEpisodes(),
+    StatsService.getStats()
+  ]);
+
+  console.log('%c[UPLINK]%c Data loaded:', 'color:#00ff41;font-weight:bold', 'color:inherit', {
+    episodes: episodes.length,
+    stats,
+    config: AppState.config
+  });
+
+  AppState.episodes = episodes;
+  AppState.stats = stats;
+
+  console.log('%c[UPLINK]%c Rendering pages...', 'color:#00ff41;font-weight:bold', 'color:inherit');
+
+  renderDashboard();
+  renderLandingMeta();
+  initCountdown();
+  renderLiveEpisode();
+  renderFullTimeline();
+  renderArchive();
+  renderDossiers();
+  ensureFormFieldIdentifiers();
+
+  handleRoute();
+
+  hideLoading();
+
+  console.log('%c[UPLINK]%c System ready!', 'color:#00ff41;font-weight:bold', 'color:inherit');
+
+  EventBus.emit('app:ready');
+}
+
+function handleLoadError(error) {
+  console.error('%c[UPLINK]%c Failed to load data:', 'color:#ff4757;font-weight:bold', 'color:inherit', error);
+  hideLoading();
+  
+  document.body.innerHTML = `
 <div style="display:flex;align-items:center;justify-content:center;height:100vh;
   color:var(--color-nexus);font-family:var(--font-mono);text-align:center;
   padding:20px;flex-direction:column;gap:20px;background:#050505">
@@ -974,10 +1091,26 @@ async function loadAll() {
     > RETRY
   </button>
 </div>`;
-    document.getElementById('retry-btn')?.addEventListener('click', () => location.reload());
-    
-    // Emit error event
-    EventBus.emit('app:error', { error });
+  document.getElementById('retry-btn')?.addEventListener('click', () => location.reload());
+  
+  EventBus.emit('app:error', { error });
+}
+
+async function loadAll() {
+  try {
+    showLoading();
+
+    console.log('%c[UPLINK]%c Loading config...', 'color:#00ff41;font-weight:bold', 'color:inherit');
+    const config = await StatsService.getConfig();
+    AppState.config = config;
+
+    const gateActive = await enforceMaintenanceGate(config);
+    if (gateActive) return;
+
+    await loadAppDataAndRender();
+
+  } catch (error) {
+    handleLoadError(error);
   }
 }
 

@@ -19,4 +19,4 @@ jobs:
           cd /srv/docker/uplink/uplink-website
           git pull origin main
           
-          rsync -av --delete --exclude='data/' ./public/ /srv/docker/data/uplink/public/
+          rsync -av --delete --exclude='data/dialogs.json' --exclude='data/stats.json' ./public/ /srv/docker/data/uplink/public/

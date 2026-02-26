@@ -9,6 +9,12 @@
     "total_days": 90,
     "season": 1
   },
+  "maintenance": {
+    "enabled": true,
+    "message": "Kurzfristige Wartung. Die \u00dcbertragungen kehren gleich zur\u00fcck.",
+    "passphrase_hint": "",
+    "passphrase_sha256": "aef3647ff0daaf7f803d4de24124e12357b6d9d9e642454605cdeaa1e26c067e"
+  },
   "characters": [
     {
       "id": "nexus",

@@ -36,7 +36,7 @@ class StatsService {
     
     this.config = await DataService.fetch(this.configUrl, {
       cache: true,
-      cacheDuration: 3600000 // 1 hour
+      cacheDuration: 60000 // 1 minute (config toggles should take effect quickly)
     });
     
     return this.config;
