@@ -1,4 +1,4 @@
-# UPLINK
+# UPLINK-WEBSITE
 
 🌐 [uplink.michaeluhrich.xyz](https://uplink.michaeluhrich.xyz)
 

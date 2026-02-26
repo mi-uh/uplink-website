@@ -1017,7 +1017,14 @@ function initEventListeners() {
   if (navTabs) {
     delegate(navTabs, '.nav-tab', 'click', function(e) {
       const page = this.dataset.page;
-      if (page) navigate(page);
+      if (page) {
+        navigate(page, { scrollToTop: false });
+        const anchorId = page === 'protokoll' ? 'episoden' : page;
+        const target = document.getElementById(anchorId) || document.getElementById(`page-${page}`);
+        if (target) {
+          setTimeout(() => target.scrollIntoView({ behavior: 'smooth', block: 'start' }), 10);
+        }
+      }
     });
   }
 

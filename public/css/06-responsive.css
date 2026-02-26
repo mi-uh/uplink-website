@@ -24,8 +24,8 @@
 
     /* Navigation */
     .nav-tabs {
-        justify-content: flex-start;
-        padding: 0 8px;
+        justify-content: center;
+        padding: 0 12px;
     }
 
     .nav-tab {
