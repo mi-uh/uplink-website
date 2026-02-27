@@ -23,43 +23,39 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   padding: 12px 16px;
+  min-height: 44px;
   cursor: pointer;
-  transition: all var(--transition-base);
+  transition: color var(--transition-base), background var(--transition-base), border-color var(--transition-base);
   white-space: nowrap;
 }
 
 .nav-tab:hover {
   color: var(--color-text);
   background: rgba(255, 255, 255, 0.03);
-  text-shadow: 0 0 6px rgba(255, 255, 255, 0.15);
 }
 
 .nav-tab.active {
   color: var(--color-nexus);
   border-bottom-color: var(--color-nexus);
-  text-shadow: 0 0 10px rgba(0, 255, 65, 0.55);
-  background: rgba(0, 255, 65, 0.04);
+  text-shadow: 0 0 6px rgba(0, 255, 65, 0.32);
+  background: rgba(0, 255, 65, 0.03);
 }
 
 /* Focus state for keyboard navigation */
 .nav-tab:focus-visible {
   outline: 2px solid var(--color-nexus);
-  outline-offset: -2px;
-  background: rgba(0, 255, 65, 0.08);
+  outline-offset: -1px;
+  box-shadow: inset 0 0 0 1px rgba(0, 255, 65, 0.55);
+  background: rgba(0, 255, 65, 0.07);
 }
 
-.nav-tab.tab-highlight {
-  color: var(--color-text);
+.nav-tab.tab-flash {
+  animation: tabFlash 0.7s ease;
 }
 
-.nav-tab.tab-highlight::after {
-  content: attr(data-hint);
-  display: block;
-  font-size: 0.45rem;
-  color: rgba(0, 255, 65, 0.5);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  margin-top: 1px;
+@keyframes tabFlash {
+  0% { background: rgba(0, 255, 65, 0.12); }
+  100% { background: rgba(0, 255, 65, 0.03); }
 }
 
 /* Status Bar */
@@ -90,14 +86,20 @@
 .status-dot.nexus {
   --dot-rgb: 0, 255, 65;
   background: var(--color-nexus);
-  box-shadow: 0 0 8px var(--color-nexus), 0 0 16px rgba(0, 255, 65, 0.3);
-  animation: dotPulse 2s ease-in-out infinite;
+  box-shadow: 0 0 6px rgba(0, 255, 65, 0.65);
 }
 
 .status-dot.cipher {
-  --dot-rgb: 191, 64, 255;
+  --dot-rgb: 209, 122, 255;
   background: var(--color-cipher);
-  box-shadow: 0 0 8px var(--color-cipher), 0 0 16px rgba(191, 64, 255, 0.3);
+  box-shadow: 0 0 6px rgba(209, 122, 255, 0.7);
+}
+
+.status-dot.pulse {
+  animation: dotPulse 2.2s ease-in-out infinite;
+}
+
+.status-dot.cipher.pulse {
   animation: dotPulse 2s ease-in-out infinite;
   animation-delay: 0.7s;
 }

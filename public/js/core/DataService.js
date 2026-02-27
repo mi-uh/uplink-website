@@ -6,7 +6,7 @@ class DataService {
   constructor() {
     this.cache = new Map();
     this.loading = new Map();
-    this.cacheVersion = '1.2';
+    this.cacheVersion = '1.3';
   }
 
   /**

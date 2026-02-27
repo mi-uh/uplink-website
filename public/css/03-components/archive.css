@@ -132,3 +132,15 @@
     margin-top: 4px;
     line-height: 1.5;
 }
+
+.arc-episode-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.arc-empty {
+    padding: 16px;
+    text-align: center;
+    font-size: 0.65rem;
+    color: var(--color-text-dim);
+}

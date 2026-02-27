@@ -1,4 +1,4 @@
-/* ==========================================================
+﻿/* ==========================================================
    DASHBOARD COMPONENT
    ========================================================== */
 
@@ -28,7 +28,7 @@
     align-items: center;
     padding: 10px 16px;
     border-bottom: 1px solid rgba(0, 255, 65, 0.08);
-    font-size: 0.7rem;
+    font-size: 0.82rem;
     letter-spacing: 0.12em;
     text-transform: uppercase;
 }
@@ -40,13 +40,80 @@
 
 .dash-header-meta {
     color: var(--color-text-dim);
-    font-size: 0.6rem;
+    font-size: 0.72rem;
 }
 
-.dash-countdown {
-    font-size: 0.65rem;
-    color: rgba(0,255,65,0.5);
-    letter-spacing: 0.06em;
+.dash-priority {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    border-bottom: 1px solid rgba(0, 255, 65, 0.08);
+}
+
+.dash-priority-item {
+    padding: 12px 14px;
+    border-right: 1px solid rgba(0, 255, 65, 0.06);
+    display: grid;
+    gap: 3px;
+}
+
+.dash-priority-item:last-child {
+    border-right: none;
+}
+
+.dash-priority-label {
+    font-size: 0.66rem;
+    color: var(--color-text-dim);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.dash-priority-value {
+    font-size: 1.08rem;
+    color: var(--color-text);
+    font-weight: 700;
+}
+
+.dash-priority-value.good {
+    color: var(--color-nexus);
+}
+
+.dash-priority-value.warn {
+    color: rgba(255, 200, 0, 0.9);
+}
+
+.dash-priority-value.danger {
+    color: rgba(255, 85, 85, 0.92);
+}
+
+.dash-details {
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.dash-details > summary {
+    cursor: pointer;
+    list-style: none;
+    padding: 10px 14px;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-text-dim);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.dash-details > summary::-webkit-details-marker {
+    display: none;
+}
+
+.dash-details > summary::before {
+    content: '+';
+    display: inline-block;
+    margin-right: 8px;
+    color: var(--color-nexus);
+    font-weight: 700;
+}
+
+.dash-details[open] > summary::before {
+    content: '-';
 }
 
 /* Dashboard bar section */
@@ -60,7 +127,7 @@
     align-items: center;
     gap: 8px;
     margin-bottom: 8px;
-    font-size: 0.7rem;
+    font-size: 0.82rem;
 }
 
 .dash-bar-label {
@@ -96,12 +163,12 @@
 }
 
 .dash-bar-fill.cipher {
-    background: rgba(191, 64, 255, 0.5);
-    box-shadow: 0 0 8px rgba(191, 64, 255, 0.2);
+    background: rgba(209, 122, 255, 0.5);
+    box-shadow: 0 0 8px rgba(209, 122, 255, 0.2);
 }
 
 .dash-bar-fill.mixed {
-    background: linear-gradient(90deg, rgba(0, 255, 65, 0.5), rgba(191, 64, 255, 0.5));
+    background: linear-gradient(90deg, rgba(0, 255, 65, 0.5), rgba(209, 122, 255, 0.5));
 }
 
 .dash-bar-fill.warn {
@@ -123,7 +190,7 @@
 .dash-bar-delta {
     width: 40px;
     text-align: right;
-    font-size: 0.6rem;
+    font-size: 0.72rem;
     flex-shrink: 0;
     color: rgba(0, 255, 65, 0.6);
 }
@@ -168,7 +235,7 @@
 
 .dash-metric-label {
     display: block;
-    font-size: 0.55rem;
+    font-size: 0.72rem;
     color: var(--color-text-dim);
     letter-spacing: 0.06em;
     text-transform: uppercase;
@@ -223,7 +290,7 @@
 }
 
 .dash-arc-label {
-    font-size: 0.55rem;
+    font-size: 0.72rem;
     color: var(--color-text-dim);
     letter-spacing: 0.04em;
     text-transform: uppercase;
@@ -238,7 +305,7 @@
 }
 
 .dash-sparkline-title {
-    font-size: 0.55rem;
+    font-size: 0.66rem;
     color: var(--color-text-dim);
     letter-spacing: 0.1em;
     text-transform: uppercase;
@@ -250,12 +317,16 @@
     width: 100%;
 }
 
+.dash-sparkline-chart {
+    height: 50px;
+}
+
 .dash-sparkline-legend {
     display: flex;
     flex-wrap: wrap;
     gap: 8px 14px;
     margin-top: 6px;
-    font-size: 0.5rem;
+    font-size: 0.62rem;
     color: var(--color-text-dim);
     letter-spacing: 0.04em;
 }
@@ -268,3 +339,25 @@
     margin-right: 4px;
     vertical-align: middle;
 }
+
+.dash-legend-item.legend-netzwerk { color: #00ff41; }
+.dash-legend-item.legend-social_engineering { color: #d17aff; }
+.dash-legend-item.legend-daten { color: #ff6b35; }
+.dash-legend-item.legend-infrastruktur { color: #ffc800; }
+.dash-legend-item.legend-einfluss { color: #00b4d8; }
+
+@media (max-width: 600px) {
+    .dash-priority {
+        grid-template-columns: 1fr;
+    }
+
+    .dash-priority-item {
+        border-right: none;
+        border-bottom: 1px solid rgba(0, 255, 65, 0.06);
+    }
+
+    .dash-priority-item:last-child {
+        border-bottom: none;
+    }
+}
+

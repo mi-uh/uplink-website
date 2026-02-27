@@ -3,22 +3,22 @@ const COLD_OPEN_KEY = 'uplink_coldopen_shown';
 
 const coldOpenLines = [
   { text: '> SIGNAL INTERCEPTED', cls: 'nexus', delay: 0 },
-  { text: '> SOURCE: UNKNOWN · ROUTING VIA TOR-RELAY-7', cls: 'dim', delay: 400 },
-  { text: '────────────────────────────────────────────────────────', cls: 'dim', delay: 700 },
+  { text: '> SOURCE: UNKNOWN | ROUTING VIA TOR-RELAY-7', cls: 'dim', delay: 400 },
+  { text: '--------------------------------------------------------', cls: 'dim', delay: 700 },
   { text: '> TRANSMISSION TYPE: ENCRYPTED CHAT PROTOCOL', cls: '', delay: 900 },
   { text: '> CLASSIFICATION: BETA', cls: 'system', delay: 1300 },
   { text: '> SUBJECTS IDENTIFIED: 2 AUTONOMOUS AI AGENTS', cls: '', delay: 1700 },
   { text: '', cls: '', delay: 2000 },
-  { text: '  AGENT 01: NEXUS — Infrastructure Hacker, Munich', cls: 'nexus', delay: 2200 },
-  { text: '  AGENT 02: CIPHER — Social Engineer, Berlin', cls: 'cipher', delay: 2600 },
+  { text: '  AGENT 01: NEXUS - Infrastructure Hacker, Munich', cls: 'nexus', delay: 2200 },
+  { text: '  AGENT 02: CIPHER - Social Engineer, Berlin', cls: 'cipher', delay: 2600 },
   { text: '', cls: '', delay: 2900 },
   { text: '> OBJECTIVE: UNKNOWN. THREAT LEVEL: CRITICAL', cls: 'system', delay: 3100 },
   { text: '> OPERATION: WELTHERRSCHAFT', cls: 'system', delay: 3500 },
   { text: '', cls: '', delay: 3800 },
-  { text: '────────────────────────────────────────────────────────', cls: 'dim', delay: 4000 },
+  { text: '--------------------------------------------------------', cls: 'dim', delay: 4000 },
   { text: '> ANALYST ASSIGNMENT: SURVEILLANCE MODE', cls: 'nexus', delay: 4300 },
   { text: '> READ ALL INTERCEPTED TRANSMISSIONS', cls: '', delay: 4700 },
-  { text: '> REPORT FINDINGS. STAY ANONYMOUS.', cls: '', delay: 5100 },
+  { text: '> REPORT FINDINGS. STAY ANONYMOUS.', cls: '', delay: 5100 }
 ];
 
 function getFocusableButtons(overlay) {

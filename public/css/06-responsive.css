@@ -3,23 +3,8 @@
    ========================================================== */
 
 @media (max-width: 600px) {
-    /* Site header */
-    .site-header {
-        padding: 16px 16px 14px;
-    }
-
-    .site-header::before {
-        font-size: 0.5rem;
-        letter-spacing: 0.08em;
-        margin-bottom: 10px;
-    }
-
     .site-title {
-        font-size: 1.6rem;
-    }
-
-    .site-subtitle {
-        font-size: 0.6rem;
+        font-size: 2rem;
     }
 
     /* Navigation */
@@ -29,14 +14,15 @@
     }
 
     .nav-tab {
-        padding: 10px 10px;
-        font-size: 0.6rem;
+        min-height: 44px;
+        padding: 10px 12px;
+        font-size: 0.68rem;
         letter-spacing: 0.06em;
     }
 
     .status-bar {
         gap: 12px;
-        font-size: 0.6rem;
+        font-size: 0.72rem;
     }
 
     /* Dashboard */
@@ -46,11 +32,11 @@
 
     .dash-bar-label {
         width: 90px;
-        font-size: 0.6rem;
+        font-size: 0.68rem;
     }
 
     .dash-bar-value {
-        font-size: 0.6rem;
+        font-size: 0.68rem;
     }
 
     .dash-bar-delta {
@@ -74,17 +60,21 @@
         padding: 0 10px 40px;
     }
 
+    .timeline[data-context="live"] .messages {
+        gap: 16px;
+    }
+
     .message {
         max-width: 90%;
         gap: 8px;
     }
 
     .message-box {
-        padding: 8px 10px;
+        padding: 10px 12px;
     }
 
     .message-system {
-        padding: 8px 10px;
+        padding: 9px 12px;
     }
 
     .message-avatar {
@@ -94,7 +84,8 @@
 
     .message-timestamp {
         display: inline-block;
-        opacity: 0.7;
+        opacity: 0.55;
+        font-size: 0.62rem;
     }
 
     /* CIPHER: Name rechts, Uhrzeit links (spiegelverkehrt zu Nexus) */
@@ -118,28 +109,47 @@
 
     .terminal-block {
         padding: 10px 12px;
-        font-size: 0.6rem;
+        font-size: 0.72rem;
+        line-height: 1.6;
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-x;
     }
 
     .terminal-block-wrap {
-        max-width: 90%;
+        max-width: calc(100% - 30px);
+    }
+
+    .timeline[data-context="live"] .terminal-block-wrap {
+        max-width: calc(100% - 24px);
     }
 
     .terminal-block-wrap.owner-nexus {
-        margin-left: 36px;
+        margin-left: 30px;
     }
 
     .terminal-block-wrap.owner-cipher {
-        margin-right: 36px;
+        margin-right: 30px;
     }
 
     .episode-context {
         padding: 6px 0 10px;
     }
 
+    .episode-share {
+        grid-template-columns: 1fr;
+        gap: 6px;
+    }
+
+    .episode-share-link,
+    .episode-share-copy {
+        min-height: 40px;
+    }
+
     .day-header {
         flex-wrap: wrap;
         gap: 4px 12px;
+        top: 46px;
+        padding: 7px 8px;
     }
 
     .day-line {
@@ -149,6 +159,11 @@
     /* Dossiers */
     .dossier-avatar-row {
         gap: 12px;
+    }
+
+    .relationship-card {
+        margin-bottom: 16px;
+        padding: 12px;
     }
 
     .dossier-avatar {
@@ -162,7 +177,7 @@
 
     .dossier-skill-name {
         width: 100px;
-        font-size: 0.6rem;
+        font-size: 0.68rem;
     }
 
     .dossier-field {

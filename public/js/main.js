@@ -1,5 +1,5 @@
-/* ==========================================================
-   UPLINK — Main Application
+﻿/* ==========================================================
+   UPLINK -- Main Application
    ========================================================== */
 
 // Import utilities
@@ -30,6 +30,10 @@ const AppState = {
 
 const ANALYST_KEY = 'uplink_analyst_id';
 const MAINT_SESSION_PREFIX = 'uplink_maintenance_';
+const ONBOARDING_KEY = 'uplink_onboarding_seen';
+const LIVE_SEEN_EPISODE_KEY = 'uplink_live_last_episode_seen';
+const VALID_PAGES = new Set(['live', 'protokoll', 'dossiers', 'info']);
+let countdownTimerId = null;
 
 function getAnalystId() {
   let id = localStorage.getItem(ANALYST_KEY);
@@ -56,6 +60,122 @@ function initAnalystMode() {
       identity.appendChild(idEl);
     }
   }
+}
+
+function formatMessageText(text) {
+  return escapeHtml(text || '')
+    .replace(/\r\n/g, '\n')
+    .replace(/\n{2,}/g, '<br><br>')
+    .replace(/\n/g, '<br>');
+}
+
+function getMetricCssClass(id, value) {
+  if (id === 'detection_risk') {
+    if (value > 70) return 'danger';
+    return value > 50 ? 'warn' : 'good';
+  }
+  if (id === 'cooperation_index') {
+    return 'good';
+  }
+  return '';
+}
+
+function formatLiveTimestamp(date = new Date()) {
+  const hh = String(date.getHours()).padStart(2, '0');
+  const mm = String(date.getMinutes()).padStart(2, '0');
+  const ss = String(date.getSeconds()).padStart(2, '0');
+  return `${hh}:${mm}:${ss}`;
+}
+
+function setLiveUpdatedTimestamp(label) {
+  const el = document.getElementById('live-last-update');
+  if (!el) return;
+  const stamp = label || formatLiveTimestamp();
+  el.textContent = `Letzte Aktualisierung: ${stamp}`;
+}
+
+function announceLiveEpisode(epNum, episodeTitle) {
+  const el = document.getElementById('live-announce');
+  if (!el) return;
+
+  const seen = Number(localStorage.getItem(LIVE_SEEN_EPISODE_KEY) || 0);
+  if (seen > 0 && epNum > seen) {
+    el.textContent = `Neue Episode eingetroffen: EP.${padNumber(epNum)} - ${episodeTitle}`;
+    el.hidden = false;
+    setTimeout(() => { el.hidden = true; }, 6000);
+  } else {
+    el.hidden = true;
+  }
+
+  localStorage.setItem(LIVE_SEEN_EPISODE_KEY, String(epNum));
+}
+
+function getFocusableElements(container) {
+  if (!(container instanceof HTMLElement)) return [];
+  const selector = [
+    'a[href]',
+    'button:not([disabled])',
+    'input:not([disabled]):not([type="hidden"])',
+    'select:not([disabled])',
+    'textarea:not([disabled])',
+    '[tabindex]:not([tabindex="-1"])'
+  ].join(', ');
+  return Array.from(container.querySelectorAll(selector))
+    .filter(el => el instanceof HTMLElement && !el.hasAttribute('inert') && el.offsetParent !== null);
+}
+
+function trapFocusIn(container, onEscape) {
+  const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  const onKeyDown = (event) => {
+    if (event.key === 'Escape') {
+      if (typeof onEscape === 'function') {
+        event.preventDefault();
+        onEscape();
+      }
+      return;
+    }
+    if (event.key !== 'Tab') return;
+    const focusable = getFocusableElements(container);
+    if (focusable.length === 0) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey) {
+      if (document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      }
+      return;
+    }
+    if (document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  };
+
+  document.addEventListener('keydown', onKeyDown);
+  return () => {
+    document.removeEventListener('keydown', onKeyDown);
+    if (previousFocus && document.contains(previousFocus)) {
+      previousFocus.focus();
+    }
+  };
+}
+
+function toSafeClassName(value, fallback = 'unknown') {
+  const normalized = String(value || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]/g, '');
+  return normalized || fallback;
+}
+
+function clampPercent(value) {
+  const raw = Number(value);
+  if (!Number.isFinite(raw)) return 0;
+  return Math.max(0, Math.min(100, Math.round(raw)));
+}
+
+function toPercentClass(value) {
+  return `pct-${clampPercent(value)}`;
 }
 
 /* ==========================================================
@@ -93,7 +213,7 @@ function renderSparkline(history, categories) {
   
   const colors = {
     netzwerk: '#00ff41',
-    social_engineering: '#bf40ff',
+    social_engineering: '#d17aff',
     daten: '#ff6b35',
     infrastruktur: '#ffc800',
     einfluss: '#00b4d8'
@@ -125,13 +245,14 @@ function renderSparkline(history, categories) {
   }).join('');
   
   // Generate legend
-  const legendItems = categories.map(c =>
-    `<span style="color:${colors[c.id]}">● ${c.label}</span>`
-  ).join('');
+  const legendItems = categories.map(c => {
+    const safeId = toSafeClassName(c?.id, 'default');
+    return `<span class="dash-legend-item legend-${safeId}">&bull; ${c.label}</span>`;
+  }).join('');
   
   return `<div class="dash-sparkline">
     <div class="dash-sparkline-title">Score-Verlauf</div>
-    <svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="height:${h}px">${paths}</svg>
+    <svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" class="dash-sparkline-chart">${paths}</svg>
     <div class="dash-sparkline-legend">${legendItems}</div>
   </div>`;
 }
@@ -162,7 +283,7 @@ function renderEpisodeMetaChips(episode) {
   });
 
   const metricLabels = {
-    devices_compromised_delta: 'Geräte',
+    devices_compromised_delta: 'Geraete',
     profiles_created_delta: 'Profile',
     vulnerabilities_found_delta: 'Vulns',
     narratives_active_delta: 'Narrative',
@@ -215,11 +336,11 @@ function renderSnapshotCard(snapshot) {
     ? `<div class="snapshot-grid">
         <div class="snapshot-stat">
           <span class="snapshot-stat-label">Vertrauen</span>
-          <span class="snapshot-stat-value">${relationship.trust ?? '—'}%</span>
+          <span class="snapshot-stat-value">${relationship.trust ?? '--'}%</span>
         </div>
         <div class="snapshot-stat">
           <span class="snapshot-stat-label">Spannung</span>
-          <span class="snapshot-stat-value">${relationship.tension ?? '—'}%</span>
+          <span class="snapshot-stat-value">${relationship.tension ?? '--'}%</span>
         </div>
       </div>
       ${relationship.notes ? `<div class="snapshot-note">${escapeHtml(relationship.notes)}</div>` : ''}`
@@ -227,9 +348,9 @@ function renderSnapshotCard(snapshot) {
 
   const worldHtml = (world.detection_risk !== undefined || world.media_awareness !== undefined || world.law_enforcement_activity !== undefined)
     ? `<div class="snapshot-grid world">
-        <div class="snapshot-stat"><span class="snapshot-stat-label">Entdeckungsrisiko</span><span class="snapshot-stat-value">${world.detection_risk ?? '—'}%</span></div>
-        <div class="snapshot-stat"><span class="snapshot-stat-label">Medienaufmerksamkeit</span><span class="snapshot-stat-value">${world.media_awareness ?? '—'}%</span></div>
-        <div class="snapshot-stat"><span class="snapshot-stat-label">Behördenaktivität</span><span class="snapshot-stat-value">${world.law_enforcement_activity ?? '—'}%</span></div>
+        <div class="snapshot-stat"><span class="snapshot-stat-label">Entdeckungsrisiko</span><span class="snapshot-stat-value">${world.detection_risk ?? '--'}%</span></div>
+        <div class="snapshot-stat"><span class="snapshot-stat-label">Medienaufmerksamkeit</span><span class="snapshot-stat-value">${world.media_awareness ?? '--'}%</span></div>
+        <div class="snapshot-stat"><span class="snapshot-stat-label">Behoerdenaktivitaet</span><span class="snapshot-stat-value">${world.law_enforcement_activity ?? '--'}%</span></div>
       </div>`
     : '';
 
@@ -291,13 +412,14 @@ async function renderDashboard() {
   const barsHtml = cats.map(cat => {
     const val = s.scores[cat.id] || 0;
     const delta = lastDeltas ? (lastDeltas[cat.id] || 0) : 0;
-    const pct = Math.min(val, cat.max);
+    const pct = clampPercent(Math.min(val, cat.max));
     const cls = val > 60 ? 'danger' : val > 35 ? 'warn' : 'nexus';
+    const widthCls = toPercentClass(pct);
     const sign = delta > 0 ? '+' : '';
     
     return `<div class="dash-bar-row">
       <span class="dash-bar-label">${cat.icon} ${cat.label}</span>
-      <div class="dash-bar-track"><div class="dash-bar-fill ${cls}" style="width:${pct}%"></div></div>
+      <div class="dash-bar-track"><div class="dash-bar-fill ${cls} ${widthCls}"></div></div>
       <span class="dash-bar-value">${pct}%</span>
       <span class="dash-bar-delta">${sign}${delta}</span>
     </div>`;
@@ -311,19 +433,37 @@ async function renderDashboard() {
     console.error('config.scoring.metrics is undefined', AppState.config);
     return;
   }
-  
-  const metricsHtml = metricDefs.map(def => {
-    const value = m[def.id];
-    const displayValue = def.unit ? value + def.unit : value;
-    
-    // Determine CSS class based on metric type
-    let cssClass = '';
-    if (def.id === 'detection_risk') {
-      cssClass = value > 50 ? 'warn' : 'good';
-    } else if (def.id === 'cooperation_index') {
-      cssClass = 'good';
+
+  const priorityOrder = ['detection_risk', 'cooperation_index', 'devices_compromised'];
+  const priorityDefs = priorityOrder
+    .map(id => metricDefs.find(def => def.id === id))
+    .filter(Boolean);
+
+  metricDefs.forEach(def => {
+    if (priorityDefs.length >= 3) return;
+    if (!priorityDefs.some(item => item.id === def.id)) {
+      priorityDefs.push(def);
     }
-    
+  });
+
+  const detailDefs = metricDefs.filter(def => !priorityDefs.some(item => item.id === def.id));
+
+  const priorityHtml = priorityDefs.map(def => {
+    const value = m[def.id];
+    const displayValue = def.unit ? `${value}${def.unit}` : value;
+    const cssClass = getMetricCssClass(def.id, value);
+
+    return `<div class="dash-priority-item">
+      <span class="dash-priority-label">${def.label}</span>
+      <span class="dash-priority-value ${cssClass}">${displayValue}</span>
+    </div>`;
+  }).join('');
+
+  const metricsHtml = detailDefs.map(def => {
+    const value = m[def.id];
+    const displayValue = def.unit ? `${value}${def.unit}` : value;
+    const cssClass = getMetricCssClass(def.id, value);
+
     return `<div class="dash-metric">
       <span class="dash-metric-value ${cssClass}">${displayValue}</span>
       <span class="dash-metric-label">${def.label}</span>
@@ -342,17 +482,24 @@ async function renderDashboard() {
   
   // Render sparkline
   const sparklineHtml = renderSparkline(s.score_history, cats);
+
+  const detailSections = [];
+  detailSections.push(`<div class="dash-bars">${barsHtml}</div>`);
+  if (metricsHtml) detailSections.push(`<div class="dash-metrics">${metricsHtml}</div>`);
+  if (sparklineHtml) detailSections.push(sparklineHtml);
+  detailSections.push(`<div class="dash-arc">${arcHtml}<span class="dash-arc-label">${phase ? phase.label : ''}</span></div>`);
   
   // Build complete dashboard
   el.innerHTML = `<div class="dash-box">
     <div class="dash-header">
       <span class="dash-header-title">Weltherrschafts-Index</span>
-      <span class="dash-header-meta">Tag ${s.current_day}/${s.total_days} · ${phase ? phase.label : '???'} · Staffel ${AppState.config.project.season}</span>
+      <span class="dash-header-meta">Tag ${s.current_day}/${s.total_days} &middot; ${phase ? phase.label : '???'} &middot; Staffel ${AppState.config.project.season}</span>
     </div>
-    <div class="dash-bars">${barsHtml}</div>
-    <div class="dash-metrics">${metricsHtml}</div>
-    ${sparklineHtml}
-    <div class="dash-arc">${arcHtml}<span class="dash-arc-label">${phase ? phase.label : ''}</span></div>
+    <div class="dash-priority">${priorityHtml}</div>
+    <details class="dash-details">
+      <summary>Mehr Analysedaten anzeigen</summary>
+      ${detailSections.join('')}
+    </details>
   </div>`;
 }
 
@@ -373,7 +520,7 @@ function renderLandingMeta() {
   const elDay = document.getElementById('meta-day');
 
   if (elEp && latestEp) {
-    elEp.textContent = `EP.${String(s.current_episode).padStart(3, '0')} — ${latestEp.title}`;
+    elEp.textContent = `EP.${String(s.current_episode).padStart(3, '0')} - ${latestEp.title}`;
   }
   if (elPhase && phase) elPhase.textContent = phase.label;
   if (elDay) elDay.textContent = `Tag ${s.current_day} / ${s.total_days}`;
@@ -384,6 +531,14 @@ function renderLandingMeta() {
    ========================================================== */
 
 function initCountdown() {
+  if (countdownTimerId) {
+    clearInterval(countdownTimerId);
+    countdownTimerId = null;
+  }
+
+  const existing = document.getElementById('countdown-panel');
+  if (existing) existing.remove();
+
   const targetDateStr = AppState.stats?.next_episode_date;
   if (!targetDateStr) return;
 
@@ -394,15 +549,12 @@ function initCountdown() {
   const statusBar = document.querySelector('.site-status-bar');
   const landingHost = (statusBar && statusBar.parentElement) || document.querySelector('.site-briefing') || document.querySelector('.site-header');
   if (landingHost) {
-    const existing = document.getElementById('countdown-panel');
-    if (existing) existing.remove();
-
     const countdownEl = document.createElement('div');
     countdownEl.className = 'countdown-panel';
     countdownEl.id = 'countdown-panel';
     countdownEl.innerHTML = `
-      <div class="countdown-label">Nächste Übertragung</div>
-      <div class="countdown-timer" id="countdown-timer" aria-live="polite">—</div>
+      <div class="countdown-label">Naechste Uebertragung</div>
+      <div class="countdown-timer" id="countdown-timer" aria-live="polite">--</div>
     `;
 
     if (statusBar) {
@@ -412,18 +564,6 @@ function initCountdown() {
     }
   }
 
-  // Dashboard header countdown (avoid duplicates)
-  const dashHeader = document.querySelector('.dash-header-meta');
-  if (dashHeader) {
-    const existingDash = document.getElementById('dash-countdown');
-    if (existingDash) existingDash.remove();
-
-    const dashCountdown = document.createElement('span');
-    dashCountdown.className = 'dash-countdown';
-    dashCountdown.id = 'dash-countdown';
-    dashHeader.parentNode.insertAdjacentElement('afterend', dashCountdown);
-  }
-
   function tick() {
     const now = new Date();
     const diff = targetDate - now;
@@ -431,8 +571,10 @@ function initCountdown() {
     if (diff <= 0) {
       const timerEl = document.getElementById('countdown-timer');
       if (timerEl) timerEl.textContent = '// ONLINE';
-      const dc = document.getElementById('dash-countdown');
-      if (dc) dc.textContent = '';
+      if (countdownTimerId) {
+        clearInterval(countdownTimerId);
+        countdownTimerId = null;
+      }
       return;
     }
 
@@ -444,16 +586,10 @@ function initCountdown() {
     const timerEl = document.getElementById('countdown-timer');
     if (timerEl) timerEl.textContent = `> ${formatted}`;
 
-    const dc = document.getElementById('dash-countdown');
-    if (dc) {
-      const nextEp = (AppState.stats?.current_episode || 0) + 1;
-      dc.textContent = `· EP.${String(nextEp).padStart(3, '0')} in ${formatted}`;
-    }
-
-    setTimeout(tick, 1000);
   }
 
   tick();
+  countdownTimerId = setInterval(tick, 1000);
 }
 
 /* ==========================================================
@@ -466,7 +602,10 @@ function initCountdown() {
  * @param {HTMLElement} container - Container element
  */
 function renderEpisode(episode, container, withId = true) {
-  const epNum = AppState.episodes.indexOf(episode) + 1;
+  const episodeNumFromData = Number(episode?.episode);
+  const epNum = Number.isInteger(episodeNumFromData) && episodeNumFromData > 0
+    ? episodeNumFromData
+    : AppState.episodes.indexOf(episode) + 1;
   const epStr = padNumber(epNum);
   const dateStr = formatDate(episode.date);
   
@@ -477,6 +616,15 @@ function renderEpisode(episode, container, withId = true) {
 
   // Get terminal blocks from episode data
   const termBlocks = episode.terminal_blocks || [];
+  const terminalBlocksByMessage = new Map();
+  termBlocks.forEach((block) => {
+    const afterMessage = Number(block?.after_message);
+    if (!Number.isInteger(afterMessage)) return;
+    if (!terminalBlocksByMessage.has(afterMessage)) {
+      terminalBlocksByMessage.set(afterMessage, []);
+    }
+    terminalBlocksByMessage.get(afterMessage).push(block);
+  });
   
   // Render messages
   const messagesHtml = episode.messages.map((msg, i) => {
@@ -485,37 +633,35 @@ function renderEpisode(episode, container, withId = true) {
     const dateDisplay = msg.timestamp && msg.timestamp.includes('T')
       ? formatDate(msg.timestamp.split('T')[0])
       : '';
-    const tsInline = dateDisplay ? `${tsDisplay} · ${dateDisplay}` : tsDisplay;
+    const tsInline = dateDisplay ? `${tsDisplay} | ${dateDisplay}` : tsDisplay;
     let html = '';
     
     // System message
     if (msg.type === 'system') {
       html += `<div class="message message-system">
-        <div class="message-text">${escapeHtml(msg.text)}</div>
+        <div class="message-text">${formatMessageText(msg.text)}</div>
         ${tsInline ? `<div class="message-timestamp" aria-hidden="true">${tsInline}</div>` : ''}
       </div>`;
     } else {
       // Regular message
-      const author = msg.author.toLowerCase();
+      const author = (msg.author || 'nexus').toLowerCase();
       html += `<div class="message message-${author}">
         <div class="message-avatar"></div>
         <div class="message-box">
           <div class="message-header">
-            <span class="message-author">${escapeHtml(msg.author)}</span>
+            <span class="message-author">${escapeHtml(msg.author || 'NEXUS')}</span>
             <span class="message-timestamp"${tsTitle ? ` title="${escapeHtml(tsTitle)}"` : ''}>${tsInline}</span>
           </div>
-          <div class="message-text">${escapeHtml(msg.text)}</div>
+          <div class="message-text">${formatMessageText(msg.text)}</div>
         </div>
       </div>`;
     }
     
     // Insert terminal blocks that come after this message
-    termBlocks.forEach(block => {
-      if (block.after_message === i) {
-        const owner = (block.owner || 'nexus').toLowerCase().replace(/[^a-z0-9_-]/g, '');
-        const safeOwner = owner || 'nexus';
-        html += `<div class="terminal-block-wrap owner-${escapeHtml(safeOwner)}"><div class="terminal-block">${escapeHtml(block.content)}</div></div>`;
-      }
+    (terminalBlocksByMessage.get(i) || []).forEach(block => {
+      const owner = (block.owner || 'nexus').toLowerCase().replace(/[^a-z0-9_-]/g, '');
+      const safeOwner = owner || 'nexus';
+      html += `<div class="terminal-block-wrap owner-${escapeHtml(safeOwner)}"><div class="terminal-block">${escapeHtml(block.content)}</div></div>`;
     });
     
     // Insert analyst note if present
@@ -533,6 +679,16 @@ function renderEpisode(episode, container, withId = true) {
       analystNotesAfter += `<div class="analyst-note">[ANALYST NOTE: ${escapeHtml(note.text)}]</div>`;
     });
   }
+
+  const firstText = (episode.messages || []).find(msg => msg && typeof msg.text === 'string' && msg.text.trim())?.text || '';
+  const shareSummary = truncate(firstText.replace(/\s+/g, ' ').trim(), 130);
+  const shareUrl = `${window.location.origin}${window.location.pathname}?ep=${epNum}#episoden`;
+  const shareText = `UPLINK EP.${epStr}: ${episode.title}${shareSummary ? ` - ${shareSummary}` : ''}`;
+  const shareHtml = `<div class="episode-share" data-url="${escapeHtml(shareUrl)}" data-share-text="${escapeHtml(shareText)}">
+    <span class="episode-share-label">Teilen</span>
+    <input class="episode-share-link" value="${escapeHtml(shareUrl)}" readonly aria-label="Deep Link zu Episode ${epStr}">
+    <button type="button" class="episode-share-copy">Link kopieren</button>
+  </div>`;
   
   // Create episode element
   const dayEl = document.createElement('div');
@@ -547,7 +703,8 @@ function renderEpisode(episode, container, withId = true) {
       <span class="day-title">${escapeHtml(episode.title)}</span>
       <span class="day-line"></span>
     </div>
-    <div class="messages">${messagesHtml}${analystNotesAfter}</div>`;
+    <div class="messages">${messagesHtml}${analystNotesAfter}</div>
+    ${shareHtml}`;
   
   if (contextHtml) {
     dayEl.insertAdjacentHTML('beforeend', contextHtml);
@@ -557,7 +714,7 @@ function renderEpisode(episode, container, withId = true) {
 
   const msgs = dayEl.querySelectorAll('.message');
   msgs.forEach((msg, i) => {
-    msg.style.setProperty('--i', Math.min(i, 20));
+    msg.classList.add(`fade-step-${Math.min(i, 20)}`);
   });
 }
 
@@ -576,13 +733,82 @@ function renderLiveEpisode() {
   container.innerHTML = '';
   
   if (AppState.episodes.length === 0) {
-    container.innerHTML = '<p style="text-align:center;color:var(--color-text-dim);padding:60px 0;">// KEINE PROTOKOLLE VERFÜGBAR</p>';
+    setLiveUpdatedTimestamp('--:--:--');
+    container.innerHTML = `
+      <div class="live-empty">
+        <div class="live-empty-title">// Keine Live-Protokolle verfuegbar</div>
+        <p class="live-empty-text">Aktuell liegt noch keine Episode fuer die Live-Ansicht vor. Du kannst neu laden oder ins Archiv wechseln.</p>
+        <div class="live-empty-actions">
+          <button type="button" id="live-empty-refresh">Erneut laden</button>
+          <button type="button" id="live-empty-archive">Zum Episoden-Archiv</button>
+        </div>
+      </div>`;
+
+    const retryBtn = document.getElementById('live-empty-refresh');
+    retryBtn?.addEventListener('click', () => location.reload());
+
+    const archiveBtn = document.getElementById('live-empty-archive');
+    archiveBtn?.addEventListener('click', () => {
+      navigate('protokoll');
+      setOrder('newest');
+      setTimeout(() => {
+        const target = document.getElementById('episoden') || document.getElementById('page-protokoll');
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 70);
+    });
     return;
   }
   
   // Render latest episode
   const latestEpisode = AppState.episodes[AppState.episodes.length - 1];
   renderEpisode(latestEpisode, container, false);
+  setLiveUpdatedTimestamp();
+  announceLiveEpisode(AppState.stats?.current_episode || AppState.episodes.length, latestEpisode.title || '');
+}
+
+async function refreshLiveData() {
+  const refreshBtn = document.getElementById('live-refresh-btn');
+  if (refreshBtn) {
+    refreshBtn.disabled = true;
+    refreshBtn.textContent = 'Laedt...';
+  }
+  setLiveUpdatedTimestamp('Aktualisiere...');
+
+  try {
+    // Force fresh reads by clearing in-memory and localStorage caches first.
+    EpisodeService.reload();
+    StatsService.reload();
+
+    const [episodes, stats] = await Promise.all([
+      EpisodeService.getAllEpisodes(),
+      StatsService.getStats()
+    ]);
+
+    AppState.episodes = episodes;
+    AppState.stats = stats;
+
+    renderDashboard();
+    renderLandingMeta();
+    initCountdown();
+    renderLiveEpisode();
+    renderFullTimeline();
+    renderArchive();
+    renderDossiers();
+  } catch (error) {
+    console.error('%c[UPLINK]%c Live refresh failed:', 'color:#ff4757;font-weight:bold', 'color:inherit', error);
+    setLiveUpdatedTimestamp('Update fehlgeschlagen');
+    const notice = document.getElementById('live-announce');
+    if (notice) {
+      notice.textContent = 'Live-Aktualisierung fehlgeschlagen. Bitte erneut versuchen.';
+      notice.hidden = false;
+      setTimeout(() => { notice.hidden = true; }, 5000);
+    }
+  } finally {
+    if (refreshBtn) {
+      refreshBtn.disabled = false;
+      refreshBtn.textContent = 'Aktualisieren';
+    }
+  }
 }
 
 /* ==========================================================
@@ -611,8 +837,8 @@ function renderFullTimeline() {
   const btnOrigin = $('#btn-origin');
   if (btnOrigin) {
     btnOrigin.textContent = AppState.currentOrder === 'newest' 
-      ? 'EP.001 ↓' 
-      : 'EP.' + padNumber(AppState.episodes.length) + ' ↓';
+      ? 'EP.001 v' 
+      : 'EP.' + padNumber(AppState.episodes.length) + ' v';
   }
 }
 
@@ -655,6 +881,25 @@ function scrollToOrigin() {
   if (el) el.scrollIntoView({ behavior: 'smooth' });
 }
 
+function scrollToTopSmooth() {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function scrollToEpisodeFromQuery() {
+  const epRaw = new URLSearchParams(window.location.search).get('ep');
+  if (!epRaw || !/^\d+$/.test(epRaw)) return;
+  const epParam = Number(epRaw);
+  if (epParam < 1) return;
+
+  setOrder('chrono');
+  setTimeout(() => {
+    const el = document.getElementById(`ep-${epParam}`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, 120);
+}
+
 /* ==========================================================
    ARCHIV PAGE
    ========================================================== */
@@ -674,7 +919,7 @@ function renderArchive() {
   const phases = AppState.config.story_arc.phases;
   const currentPhaseIdx = phases.findIndex(p => p.id === AppState.stats.phase);
 
-  // Nur bereits veröffentlichte Phasen anzeigen (keine zukünftigen)
+  // Nur bereits veroeffentlichte Phasen anzeigen (keine zukuenftigen)
   const visiblePhases = phases.filter((_, i) => i <= currentPhaseIdx);
 
   visiblePhases.forEach((phase, phaseIdx) => {
@@ -698,14 +943,17 @@ function renderArchive() {
     let episodesHtml = '';
     if (episodes.length > 0) {
       episodesHtml = '<div class="arc-episodes">' + episodes.map(ep => {
-        const epNum = AppState.episodes.indexOf(ep) + 1;
+        const epNumFromData = Number(ep?.episode);
+        const epNum = Number.isInteger(epNumFromData) && epNumFromData > 0
+          ? epNumFromData
+          : AppState.episodes.indexOf(ep) + 1;
         const dateStr = formatDate(ep.date);
         const firstMsg = ep.messages.find(m => m.author);
         const preview = firstMsg ? truncate(firstMsg.text, 120) : '';
 
         return `<button class="arc-episode" data-ep-num="${epNum}">
           <span class="arc-ep-num">EP.${padNumber(epNum)}</span>
-          <div style="flex:1;min-width:0">
+          <div class="arc-episode-main">
             <div class="arc-ep-title">// ${escapeHtml(ep.title)}</div>
             <div class="arc-ep-preview">${escapeHtml(preview)}</div>
           </div>
@@ -713,14 +961,14 @@ function renderArchive() {
         </button>`;
       }).join('') + '</div>';
     } else {
-      episodesHtml = '<div style="padding:16px;text-align:center;font-size:0.65rem;color:var(--color-text-dim)">Keine Episoden</div>';
+      episodesHtml = '<div class="arc-empty">Keine Episoden</div>';
     }
     
     phaseEl.innerHTML = `
       <div class="arc-phase-header">
         <div>
           <div class="arc-phase-title">${phase.label}</div>
-          <div class="arc-phase-meta">Tag ${phase.days[0]}–${phase.days[1]}</div>
+          <div class="arc-phase-meta">Tag ${phase.days[0]}-${phase.days[1]}</div>
         </div>
         <span class="arc-phase-tag ${tagCls}">${tagText}</span>
       </div>
@@ -728,6 +976,65 @@ function renderArchive() {
     
     container.appendChild(phaseEl);
   });
+}
+
+function getRelationshipSnapshot() {
+  const episodes = AppState.episodes || [];
+  const snapshots = episodes
+    .map(ep => ep?.state_snapshot?.relationship || ep?.narrative_snapshot?.relationship)
+    .filter(rel => rel && typeof rel.trust === 'number' && typeof rel.tension === 'number');
+
+  const latest = snapshots.length ? snapshots[snapshots.length - 1] : null;
+  const prev = snapshots.length > 1 ? snapshots[snapshots.length - 2] : null;
+
+  if (latest) {
+    return {
+      trust: Math.max(0, Math.min(100, latest.trust)),
+      tension: Math.max(0, Math.min(100, latest.tension)),
+      trustDelta: prev ? latest.trust - prev.trust : 0,
+      tensionDelta: prev ? latest.tension - prev.tension : 0
+    };
+  }
+
+  const metrics = AppState.stats?.metrics || {};
+  const fallbackTrust = Number.isFinite(metrics.cooperation_index) ? metrics.cooperation_index : 50;
+  const fallbackTension = Number.isFinite(metrics.detection_risk) ? metrics.detection_risk : 50;
+  return {
+    trust: Math.max(0, Math.min(100, fallbackTrust)),
+    tension: Math.max(0, Math.min(100, fallbackTension)),
+    trustDelta: 0,
+    tensionDelta: 0
+  };
+}
+
+function renderRelationshipCard() {
+  const rel = getRelationshipSnapshot();
+  const trustWidthClass = toPercentClass(rel.trust);
+  const tensionWidthClass = toPercentClass(rel.tension);
+  const trustSign = rel.trustDelta > 0 ? '+' : '';
+  const tensionSign = rel.tensionDelta > 0 ? '+' : '';
+
+  return `<section class="relationship-card" aria-label="Beziehungsdynamik zwischen NEXUS und CIPHER">
+    <h3 class="relationship-title">Beziehungsdynamik NEXUS/CIPHER</h3>
+    <div class="relationship-grid">
+      <div class="relationship-item trust">
+        <div class="relationship-head">
+          <span class="relationship-label">Vertrauen</span>
+          <span class="relationship-value">${rel.trust}%</span>
+          <span class="relationship-delta">${trustSign}${rel.trustDelta}</span>
+        </div>
+        <div class="relationship-track"><span class="relationship-fill ${trustWidthClass}"></span></div>
+      </div>
+      <div class="relationship-item tension">
+        <div class="relationship-head">
+          <span class="relationship-label">Spannung</span>
+          <span class="relationship-value">${rel.tension}%</span>
+          <span class="relationship-delta">${tensionSign}${rel.tensionDelta}</span>
+        </div>
+        <div class="relationship-track"><span class="relationship-fill ${tensionWidthClass}"></span></div>
+      </div>
+    </div>
+  </section>`;
 }
 
 /* ==========================================================
@@ -744,64 +1051,89 @@ function renderDossiers() {
   if (!container) return;
   
   const characters = AppState.config.characters;
-  
-  if (!characters || !Array.isArray(characters)) {
-    console.error('config.characters is undefined or not an array', AppState.config);
+  const relationHtml = renderRelationshipCard();
+  if (!Array.isArray(characters) || characters.length === 0) {
+    container.innerHTML = `${relationHtml}<div class="live-empty"><div class="live-empty-title">// Keine Dossier-Daten verfuegbar</div><p class="live-empty-text">Die Charakterdaten konnten nicht geladen werden.</p></div>`;
     return;
   }
-  
-  const dossiersHtml = characters.map(char => `
-    <article class="dossier ${char.id}">
-      <div class="dossier-stamp" aria-label="Klassifizierung">&#x2588; Klassifiziert &#x2588; Subjekt: ${char.name} &#x2588; Bedrohungsstufe: Kritisch &#x2588;</div>
+
+  const dossiersHtml = characters.map(char => {
+    const safeId = toSafeClassName(char?.id, 'unknown');
+    const safeName = escapeHtml(char?.name || 'UNBEKANNT');
+    const safeRole = escapeHtml(char?.role || 'Unbekannt');
+    const safeFramework = escapeHtml(char?.framework || 'Unbekannt');
+    const safeHostDetails = escapeHtml(char?.host_details || char?.host || 'Unbekannt');
+    const safeOperator = escapeHtml(char?.operator || 'Unbekannt');
+    const safeLocation = escapeHtml(char?.location || 'Unbekannt');
+    const safeStatus = escapeHtml(char?.status || 'Unbekannt');
+    const safeStatusClass = safeId === 'nexus' || safeId === 'cipher' ? `dossier-status-${safeId}` : '';
+
+    const personality = Array.isArray(char?.personality) ? char.personality : [];
+    const weaknesses = Array.isArray(char?.weaknesses) ? char.weaknesses : [];
+    const skills = Array.isArray(char?.skills) ? char.skills : [];
+
+    const personalityHtml = personality.map((item) => `<li>${escapeHtml(item)}</li>`).join('');
+    const weaknessesHtml = weaknesses.map((item) => `<li>${escapeHtml(item)}</li>`).join('');
+    const skillsHtml = skills.map((skill) => {
+      const name = escapeHtml(skill?.name || 'Skill');
+      const value = clampPercent(skill?.value);
+      const widthCls = toPercentClass(value);
+      return `
+            <div class="dossier-skill">
+              <span class="dossier-skill-name">${name}</span>
+              <div class="dossier-skill-bar" role="progressbar" aria-valuenow="${value}" aria-valuemin="0" aria-valuemax="100" aria-label="${name} ${value} Prozent">
+                <div class="dossier-skill-fill ${widthCls}"></div>
+              </div>
+              <span class="dossier-skill-pct" aria-hidden="true">${value}%</span>
+            </div>
+      `;
+    }).join('');
+
+    return `
+    <article class="dossier ${safeId}">
+      <div class="dossier-stamp" aria-label="Klassifizierung">&#x2588; Klassifiziert &#x2588; Subjekt: ${safeName} &#x2588; Bedrohungsstufe: Kritisch &#x2588;</div>
       <div class="dossier-body">
         <div class="dossier-avatar-row">
-          <div class="dossier-avatar" role="img" aria-label="${char.name} Avatar"></div>
+          <div class="dossier-avatar" role="img" aria-label="${safeName} Avatar"></div>
           <div>
-            <h2 class="dossier-name">${char.name}</h2>
-            <div class="dossier-role">${char.role}</div>
+            <h2 class="dossier-name">${safeName}</h2>
+            <div class="dossier-role">${safeRole}</div>
           </div>
         </div>
         
         <div class="dossier-section">
           <h3 class="dossier-section-title">Identifikation</h3>
-          <div class="dossier-field"><span class="dossier-field-label">Framework:</span><span class="dossier-field-value">${char.framework}</span></div>
-          <div class="dossier-field"><span class="dossier-field-label">Host:</span><span class="dossier-field-value">${char.host_details}</span></div>
-          <div class="dossier-field"><span class="dossier-field-label">Betreiber:</span><span class="dossier-field-value">${char.operator}</span></div>
-          <div class="dossier-field"><span class="dossier-field-label">Standort:</span><span class="dossier-field-value">${char.location}</span></div>
-          <div class="dossier-field"><span class="dossier-field-label">Status:</span><span class="dossier-field-value" style="color:var(--color-${char.id})">${char.status}</span></div>
+          <div class="dossier-field"><span class="dossier-field-label">Framework:</span><span class="dossier-field-value">${safeFramework}</span></div>
+          <div class="dossier-field"><span class="dossier-field-label">Host:</span><span class="dossier-field-value">${safeHostDetails}</span></div>
+          <div class="dossier-field"><span class="dossier-field-label">Betreiber:</span><span class="dossier-field-value">${safeOperator}</span></div>
+          <div class="dossier-field"><span class="dossier-field-label">Standort:</span><span class="dossier-field-value">${safeLocation}</span></div>
+          <div class="dossier-field"><span class="dossier-field-label">Status:</span><span class="dossier-field-value ${safeStatusClass}">${safeStatus}</span></div>
         </div>
         
         <div class="dossier-section">
-          <h3 class="dossier-section-title">Persönlichkeitsprofil</h3>
+          <h3 class="dossier-section-title">Persoenlichkeitsprofil</h3>
           <ul class="dossier-list">
-            ${char.personality.map(p => `<li>${escapeHtml(p)}</li>`).join('')}
+            ${personalityHtml}
           </ul>
         </div>
         
         <div class="dossier-section">
-          <h3 class="dossier-section-title">Fähigkeiten</h3>
-          ${char.skills.map(skill => `
-            <div class="dossier-skill">
-              <span class="dossier-skill-name">${escapeHtml(skill.name)}</span>
-              <div class="dossier-skill-bar" role="progressbar" aria-valuenow="${skill.value}" aria-valuemin="0" aria-valuemax="100" aria-label="${escapeHtml(skill.name)} ${skill.value} Prozent">
-                <div class="dossier-skill-fill" style="width:${skill.value}%"></div>
-              </div>
-              <span class="dossier-skill-pct" aria-hidden="true">${skill.value}%</span>
-            </div>
-          `).join('')}
+          <h3 class="dossier-section-title">Faehigkeiten</h3>
+          ${skillsHtml}
         </div>
         
         <div class="dossier-section">
-          <h3 class="dossier-section-title">Schwächen</h3>
+          <h3 class="dossier-section-title">Schwaechen</h3>
           <ul class="dossier-list">
-            ${char.weaknesses.map(w => `<li>${escapeHtml(w)}</li>`).join('')}
+            ${weaknessesHtml}
           </ul>
         </div>
       </div>
     </article>
-  `).join('');
+  `;
+  }).join('');
   
-  container.innerHTML = dossiersHtml;
+  container.innerHTML = relationHtml + dossiersHtml;
 }
 
 /* ==========================================================
@@ -827,6 +1159,7 @@ function hashToPage(hash) {
 
 function navigate(page, options = {}) {
   const { scrollToTop = true, updateHash = true } = options;
+  const targetPage = VALID_PAGES.has(page) ? page : 'live';
 
   // Deactivate all pages and tabs
   $$('.page').forEach(p => {
@@ -840,33 +1173,36 @@ function navigate(page, options = {}) {
   });
   
   // Activate target page
-  const pageEl = $(`#page-${page}`);
+  const pageEl = $(`#page-${targetPage}`);
   if (pageEl) {
     pageEl.classList.add('active');
     pageEl.removeAttribute('hidden');
   }
   
   // Activate target tab
-  const tabEl = $(`.nav-tab[data-page="${page}"]`);
+  const tabEl = $(`.nav-tab[data-page="${targetPage}"]`);
   if (tabEl) {
     tabEl.classList.add('active');
+    tabEl.classList.remove('tab-flash');
+    requestAnimationFrame(() => tabEl.classList.add('tab-flash'));
+    setTimeout(() => tabEl.classList.remove('tab-flash'), 750);
     tabEl.setAttribute('aria-selected', 'true');
     tabEl.setAttribute('tabindex', '0');
   }
   
   // Update hash and scroll to top
   if (updateHash) {
-    window.location.hash = pageToHash(page);
+    window.location.hash = pageToHash(targetPage);
   }
   if (scrollToTop) {
     window.scrollTo({ top: 0 });
   }
   
   // Update state
-  AppState.currentPage = page;
+  AppState.currentPage = targetPage;
   
   // Emit navigation event
-  EventBus.emit('navigate', { page });
+  EventBus.emit('navigate', { page: targetPage });
 }
 
 /**
@@ -874,13 +1210,21 @@ function navigate(page, options = {}) {
  */
 function handleRoute() {
   let hash = hashToPage(window.location.hash.replace('#', ''));
+  if (!VALID_PAGES.has(hash) && hash !== 'archiv') {
+    hash = 'live';
+  }
   if (hash === 'archiv') {
     navigate('protokoll', { updateHash: true });
     setOrder('phase');
     return;
   }
-  if (AppState.currentPage === hash) return;
+  const epRaw = new URLSearchParams(window.location.search).get('ep');
+  const hasEpisodeQuery = !!(epRaw && /^\d+$/.test(epRaw));
+  if (AppState.currentPage === hash && !(hash === 'protokoll' && hasEpisodeQuery)) return;
   navigate(hash, { updateHash: false });
+  if (hash === 'protokoll') {
+    scrollToEpisodeFromQuery();
+  }
 }
 
 
@@ -926,7 +1270,17 @@ async function hashSHA256(input) {
  */
 async function enforceMaintenanceGate(config) {
   const settings = config?.maintenance;
-  if (!settings?.enabled) return false;
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('maintenance') === 'off') {
+    sessionStorage.setItem('uplink_maintenance_force_off', '1');
+  }
+  if (sessionStorage.getItem('uplink_maintenance_force_off') === '1') {
+    return false;
+  }
+
+  const enabledRaw = settings?.enabled;
+  const enabled = enabledRaw === true || enabledRaw === 'true' || enabledRaw === 1 || enabledRaw === '1';
+  if (!enabled) return false;
 
   const expectedHash = (settings.passphrase_sha256 || '').trim().toLowerCase();
   const sessionKey = `${MAINT_SESSION_PREFIX}${expectedHash || 'open'}`;
@@ -959,7 +1313,7 @@ async function enforceMaintenanceGate(config) {
             <button type="submit" id="maintenance-submit" class="maintenance-btn">Freischalten</button>
           </div>
           ${hint}
-          <p class="maintenance-note">Nur temporärer Zugang für Betreiber. Öffentliche Auslieferung pausiert.</p>
+          <p class="maintenance-note">Nur temporaerer Zugang fuer Betreiber. Oeffentliche Auslieferung pausiert.</p>
           <div class="maintenance-error" role="alert" aria-live="assertive"></div>
         </form>
       ` : `
@@ -977,8 +1331,16 @@ async function enforceMaintenanceGate(config) {
   const submitBtn = overlay.querySelector('#maintenance-submit');
   const input = overlay.querySelector('#maintenance-pass');
   const errorEl = overlay.querySelector('.maintenance-error');
+  const releaseFocusTrap = trapFocusIn(overlay, () => {
+    if (!requirePassword) {
+      void unlock();
+      return;
+    }
+    input?.focus();
+  });
 
   const unlock = async () => {
+    releaseFocusTrap();
     sessionStorage.setItem(sessionKey, expectedHash || 'open');
     overlay.classList.add('closing');
     setTimeout(() => overlay.remove(), 200);
@@ -1017,7 +1379,7 @@ async function enforceMaintenanceGate(config) {
       } catch (err) {
         console.error('Maintenance gate error', err);
         const msg = err.message === 'HTTPS_REQUIRED'
-          ? 'Nur über HTTPS verfügbar.'
+          ? 'Nur ueber HTTPS verfuegbar.'
           : 'Unerwarteter Fehler. Bitte erneut versuchen.';
         errorEl && (errorEl.textContent = msg);
         submitBtn.disabled = false;
@@ -1073,29 +1435,25 @@ async function loadAppDataAndRender() {
 function handleLoadError(error) {
   console.error('%c[UPLINK]%c Failed to load data:', 'color:#ff4757;font-weight:bold', 'color:inherit', error);
   hideLoading();
-  
+
   document.body.innerHTML = `
-<div style="display:flex;align-items:center;justify-content:center;height:100vh;
-  color:var(--color-nexus);font-family:var(--font-mono);text-align:center;
-  padding:20px;flex-direction:column;gap:20px;background:#050505">
-  <pre style="color:rgba(255,60,60,0.8);font-size:0.75rem;line-height:1.8;letter-spacing:0.08em">
-// CONNECTION FAILED
-// CLASSIFICATION: ERROR
-// CODE: ${escapeHtml(error.message)}
-// ────────────────────────────────────────────────
+<div class="load-error-shell">
+  <div class="load-error-card">
+    <div class="load-error-title">// CONNECTION FAILED</div>
+    <div class="load-error-copy">Die Daten konnten nicht geladen werden. Bitte Verbindung pr&uuml;fen und erneut versuchen.</div>
+    <pre class="load-error-details">// CODE: ${escapeHtml(error.message || 'UNKNOWN_ERROR')}
+// TIME: ${escapeHtml(new Date().toISOString())}
 // RETRY PROTOCOL: MANUAL</pre>
-  <button id="retry-btn" style="padding:10px 24px;background:none;
-    border:1px solid var(--color-nexus);color:var(--color-nexus);
-    font-family:var(--font-mono);cursor:pointer;font-weight:700;
-    text-transform:uppercase;letter-spacing:0.1em;font-size:0.75rem">
-    > RETRY
-  </button>
+    <button id="retry-btn" class="load-error-btn">
+      Erneut verbinden
+    </button>
+  </div>
 </div>`;
+
   document.getElementById('retry-btn')?.addEventListener('click', () => location.reload());
-  
+
   EventBus.emit('app:error', { error });
 }
-
 async function loadAll() {
   try {
     showLoading();
@@ -1137,6 +1495,67 @@ function ensureFormFieldIdentifiers() {
   observer.observe(document.body, { childList: true, subtree: true });
 }
 
+async function copyText(text) {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+
+  const temp = document.createElement('textarea');
+  temp.value = text;
+  temp.setAttribute('readonly', '');
+  temp.className = 'copy-temp-textarea';
+  document.body.appendChild(temp);
+  temp.select();
+  document.execCommand('copy');
+  temp.remove();
+}
+
+async function handleShareCopy(button) {
+  const share = button.closest('.episode-share');
+  if (!share) return;
+
+  const url = share.dataset.url || '';
+  if (!url) return;
+
+  const prev = button.textContent;
+  try {
+    await copyText(url);
+    button.textContent = 'Kopiert';
+  } catch (error) {
+    console.error('Share copy failed', error);
+    button.textContent = 'Fehler';
+  }
+
+  setTimeout(() => { button.textContent = prev; }, 1200);
+}
+
+function handleGlobalShortcuts(event) {
+  if (event.defaultPrevented) return;
+  if (event.ctrlKey || event.altKey || event.metaKey) return;
+
+  const target = event.target;
+  if (target instanceof HTMLElement && target.closest('input, textarea, select, [contenteditable="true"]')) {
+    return;
+  }
+
+  const key = event.key.toLowerCase();
+  if (key === 'l') {
+    event.preventDefault();
+    navigate('live');
+    return;
+  }
+  if (key === 'e') {
+    event.preventDefault();
+    navigate('protokoll');
+    return;
+  }
+  if (key === 'd') {
+    event.preventDefault();
+    navigate('dossiers');
+  }
+}
+
 /* ==========================================================
    EVENT LISTENERS
    ========================================================== */
@@ -1158,6 +1577,26 @@ function initEventListeners() {
           setTimeout(() => target.scrollIntoView({ behavior: 'smooth', block: 'start' }), 10);
         }
       }
+    });
+
+    navTabs.addEventListener('keydown', (event) => {
+      const tabs = Array.from(navTabs.querySelectorAll('.nav-tab'));
+      if (tabs.length === 0) return;
+      const currentIndex = tabs.findIndex(tab => tab === document.activeElement);
+      if (currentIndex < 0) return;
+
+      let nextIndex = -1;
+      if (event.key === 'ArrowRight') nextIndex = (currentIndex + 1) % tabs.length;
+      if (event.key === 'ArrowLeft') nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+      if (event.key === 'Home') nextIndex = 0;
+      if (event.key === 'End') nextIndex = tabs.length - 1;
+
+      if (nextIndex < 0) return;
+      event.preventDefault();
+      const nextTab = tabs[nextIndex];
+      if (!(nextTab instanceof HTMLButtonElement)) return;
+      nextTab.focus();
+      nextTab.click();
     });
   }
 
@@ -1202,8 +1641,18 @@ function initEventListeners() {
     titleLink.addEventListener('click', (e) => {
       e.preventDefault();
       navigate('live');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      scrollToTopSmooth();
     });
+  }
+
+  const topLiveBtn = $('#btn-top-live');
+  if (topLiveBtn) {
+    topLiveBtn.addEventListener('click', () => scrollToTopSmooth());
+  }
+
+  const topProtokollBtn = $('#btn-top-protokoll');
+  if (topProtokollBtn) {
+    topProtokollBtn.addEventListener('click', () => scrollToTopSmooth());
   }
 
   // CTA: Zur neuesten Episode (scroll past dashboard to first episode)
@@ -1219,17 +1668,51 @@ function initEventListeners() {
     });
   }
 
-  // CTA: Was ist UPLINK? (scroll to info)
-  const ctaInfo = document.querySelector('.cta[href="#info"]');
-  if (ctaInfo) {
-    ctaInfo.addEventListener('click', (e) => {
-      e.preventDefault();
-      navigate('info', { scrollToTop: false });
-      setTimeout(() => {
-        const target = document.getElementById('info') || document.getElementById('page-info');
-        if (target) target.scrollIntoView({ behavior: 'smooth' });
-      }, 80);
+  const liveRefreshBtn = $('#live-refresh-btn');
+  if (liveRefreshBtn) {
+    liveRefreshBtn.addEventListener('click', () => refreshLiveData());
+  }
+
+  // Header accordion: compact "Was ist UPLINK?" explainer
+  const ctaInfoToggle = $('#cta-info-toggle');
+  const headerInfoPanel = $('#header-info-panel');
+  const headerInfoLink = $('#header-info-link');
+
+  if (ctaInfoToggle && headerInfoPanel) {
+    const setInfoOpen = (open) => {
+      headerInfoPanel.hidden = !open;
+      ctaInfoToggle.setAttribute('aria-expanded', String(open));
+    };
+
+    ctaInfoToggle.addEventListener('click', () => {
+      setInfoOpen(headerInfoPanel.hidden);
     });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !headerInfoPanel.hidden) {
+        setInfoOpen(false);
+        ctaInfoToggle.focus();
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      const target = e.target;
+      if (!(target instanceof Node)) return;
+      if (headerInfoPanel.hidden) return;
+      if (ctaInfoToggle.contains(target) || headerInfoPanel.contains(target)) return;
+      setInfoOpen(false);
+    });
+
+    if (headerInfoLink) {
+      headerInfoLink.addEventListener('click', () => {
+        setInfoOpen(false);
+        navigate('info', { scrollToTop: false });
+        setTimeout(() => {
+          const target = document.getElementById('info') || document.getElementById('page-info');
+          if (target) target.scrollIntoView({ behavior: 'smooth' });
+        }, 80);
+      });
+    }
   }
   
   // Archive episode navigation (inside page-protokoll, switch to chrono view)
@@ -1245,8 +1728,86 @@ function initEventListeners() {
     });
   }
 
+  const mainContent = $('#main-content');
+  if (mainContent) {
+    delegate(mainContent, '.episode-share-copy', 'click', function() {
+      handleShareCopy(this);
+    });
+  }
+
   // Hash change
   window.addEventListener('hashchange', handleRoute);
+  window.addEventListener('keydown', handleGlobalShortcuts);
+}
+
+function showOnboardingGuide() {
+  if (localStorage.getItem(ONBOARDING_KEY)) return;
+  if (document.getElementById('onboarding-overlay')) return;
+
+  const overlay = document.createElement('div');
+  overlay.id = 'onboarding-overlay';
+  overlay.className = 'onboarding-overlay';
+  overlay.innerHTML = `
+    <div class="onboarding-card" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
+      <div class="onboarding-eyebrow">Schnellstart</div>
+      <h2 id="onboarding-title">Willkommen bei UPLINK</h2>
+      <ol class="onboarding-steps">
+        <li><span>1.</span>Live lesen: Starte bei der neuesten Episode und verstehe den aktuellen Status sofort.</li>
+        <li><span>2.</span>Episoden-Kontext: Wechsle auf Chronologisch oder Nach Phase, um die Story sauber aufzubauen.</li>
+        <li><span>3.</span>Dossiers nutzen: Lies Rollen, Skills und Schwachstellen von NEXUS und CIPHER.</li>
+      </ol>
+      <div class="onboarding-actions">
+        <button type="button" class="onboarding-btn" data-onboarding-page="live">Live</button>
+        <button type="button" class="onboarding-btn" data-onboarding-page="protokoll">Episoden</button>
+        <button type="button" class="onboarding-btn" data-onboarding-page="dossiers">Dossiers</button>
+      </div>
+      <button type="button" class="onboarding-close" id="onboarding-close">Alles klar</button>
+    </div>`;
+
+  let releaseFocusTrap = () => {};
+
+  const close = (page) => {
+    localStorage.setItem(ONBOARDING_KEY, '1');
+    releaseFocusTrap();
+    overlay.classList.add('closing');
+    setTimeout(() => overlay.remove(), 180);
+
+    if (page) {
+      navigate(page, { scrollToTop: false });
+      const anchorId = page === 'protokoll' ? 'episoden' : page;
+      const target = document.getElementById(anchorId) || document.getElementById(`page-${page}`);
+      if (target) {
+        setTimeout(() => target.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+      }
+    }
+  };
+
+  overlay.querySelectorAll('[data-onboarding-page]').forEach((btn) => {
+    btn.addEventListener('click', () => close(btn.dataset.onboardingPage));
+  });
+  overlay.querySelector('#onboarding-close')?.addEventListener('click', () => close());
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) {
+      close();
+    }
+  });
+  document.body.appendChild(overlay);
+  releaseFocusTrap = trapFocusIn(overlay, () => close());
+  const firstFocusable = getFocusableElements(overlay)[0];
+  firstFocusable?.focus();
+}
+
+function queueOnboardingGuide() {
+  if (localStorage.getItem(ONBOARDING_KEY)) return;
+  const attempt = () => {
+    const coldOpen = document.getElementById('cold-open');
+    if (coldOpen && document.body.contains(coldOpen)) {
+      setTimeout(attempt, 350);
+      return;
+    }
+    showOnboardingGuide();
+  };
+  setTimeout(attempt, 700);
 }
 
 /* ==========================================================
@@ -1259,24 +1820,9 @@ function initEventListeners() {
 function init() {
   console.log('%c[UPLINK]%c System initializing...', 'color:#00ff41;font-weight:bold', 'color:inherit');
 
-  if (!localStorage.getItem('uplink_visited')) {
-    const infoTab = document.querySelector('[data-page="info"]');
-    if (infoTab) {
-      infoTab.setAttribute('data-hint', 'Neu hier?');
-      infoTab.classList.add('tab-highlight');
-    }
-  }
-
-  EventBus.on('navigate', ({ page }) => {
-    if (!localStorage.getItem('uplink_visited')) {
-      localStorage.setItem('uplink_visited', '1');
-      const infoTab = document.querySelector('[data-page="info"]');
-      if (infoTab) infoTab.classList.remove('tab-highlight');
-    }
-  });
-
   initColdOpen();
   initAnalystMode();
+  queueOnboardingGuide();
 
   // Initialize event listeners
   initEventListeners();
@@ -1307,3 +1853,5 @@ export {
   renderArchive,
   renderEpisode
 };
+
+

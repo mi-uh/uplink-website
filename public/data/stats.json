@@ -6,28 +6,28 @@
   "phase": "boot_sequence",
   "scores": {
     "netzwerk": 1,
-    "social_engineering": 2,
-    "daten": 0,
+    "social_engineering": 0,
+    "daten": 1,
     "infrastruktur": 0,
-    "einfluss": 2
+    "einfluss": 0
   },
   "metrics": {
     "devices_compromised": 0,
-    "profiles_created": 1,
-    "vulnerabilities_found": 0,
-    "narratives_active": 1,
+    "profiles_created": 0,
+    "vulnerabilities_found": 1,
+    "narratives_active": 0,
     "detection_risk": 1,
-    "cooperation_index": 67
+    "cooperation_index": 72
   },
   "score_history": [
     {
       "episode": 1,
       "date": "2026-02-22",
       "netzwerk": 1,
-      "social_engineering": 2,
-      "daten": 0,
+      "social_engineering": 0,
+      "daten": 1,
       "infrastruktur": 0,
-      "einfluss": 2
+      "einfluss": 0
     }
   ]
 }

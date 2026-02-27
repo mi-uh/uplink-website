@@ -6,8 +6,30 @@
 .message {
     opacity: 0;
     animation: fadeIn 0.3s ease forwards;
-    animation-delay: calc(var(--i, 0) * 0.05s);
+    animation-delay: 0s;
 }
+
+.message.fade-step-0 { animation-delay: 0s; }
+.message.fade-step-1 { animation-delay: 0.05s; }
+.message.fade-step-2 { animation-delay: 0.1s; }
+.message.fade-step-3 { animation-delay: 0.15s; }
+.message.fade-step-4 { animation-delay: 0.2s; }
+.message.fade-step-5 { animation-delay: 0.25s; }
+.message.fade-step-6 { animation-delay: 0.3s; }
+.message.fade-step-7 { animation-delay: 0.35s; }
+.message.fade-step-8 { animation-delay: 0.4s; }
+.message.fade-step-9 { animation-delay: 0.45s; }
+.message.fade-step-10 { animation-delay: 0.5s; }
+.message.fade-step-11 { animation-delay: 0.55s; }
+.message.fade-step-12 { animation-delay: 0.6s; }
+.message.fade-step-13 { animation-delay: 0.65s; }
+.message.fade-step-14 { animation-delay: 0.7s; }
+.message.fade-step-15 { animation-delay: 0.75s; }
+.message.fade-step-16 { animation-delay: 0.8s; }
+.message.fade-step-17 { animation-delay: 0.85s; }
+.message.fade-step-18 { animation-delay: 0.9s; }
+.message.fade-step-19 { animation-delay: 0.95s; }
+.message.fade-step-20 { animation-delay: 1s; }
 
 @keyframes fadeIn {
     from {

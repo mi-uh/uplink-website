@@ -1,4 +1,4 @@
-/* ==========================================================
+﻿/* ==========================================================
    LANDING & PAGE HEADERS
    ========================================================== */
 
@@ -173,8 +173,149 @@ html {
 }
 
 .page-chip.cipher {
-  border-color: rgba(191, 64, 255, 0.4);
+  border-color: rgba(209, 122, 255, 0.4);
   color: var(--color-cipher);
+}
+
+.page-end-actions {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 0 20px 28px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.page-top-btn {
+  min-height: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+
+.page-top-btn:hover {
+  border-color: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* Live tab utility row */
+.live-toolbar {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 10px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.live-agents {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  color: var(--color-text-dim);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.live-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.live-updated {
+  color: var(--color-text-dim);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.live-refresh-btn {
+  min-height: 36px;
+  padding: 7px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+
+.live-refresh-btn:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.56);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.live-refresh-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.live-announce {
+  max-width: 680px;
+  margin: 12px auto 0;
+  padding: 10px 12px;
+  border: 1px solid rgba(0, 255, 65, 0.26);
+  border-left: 2px solid rgba(0, 255, 65, 0.5);
+  background: rgba(0, 255, 65, 0.04);
+  color: var(--color-nexus);
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+}
+
+.live-empty {
+  margin: 20px auto 0;
+  max-width: 680px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-left: 2px solid rgba(255, 200, 0, 0.5);
+  background: rgba(255, 255, 255, 0.02);
+  padding: 16px;
+  display: grid;
+  gap: 10px;
+}
+
+.live-empty-title {
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
+  color: var(--color-amber);
+  text-transform: uppercase;
+}
+
+.live-empty-text {
+  color: var(--color-text-dim);
+  line-height: 1.6;
+  font-size: 0.86rem;
+}
+
+.live-empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.live-empty-actions button {
+  min-height: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: transparent;
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: 0.67rem;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  padding: 8px 12px;
+}
+
+.live-empty-actions button:hover {
+  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 @media (max-width: 900px) {  
@@ -188,4 +329,52 @@ html {
     width: 100%;
     justify-content: flex-start;
   }
+
+  .live-toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .live-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+
 }
+
+@media (max-width: 540px) {
+  .live-toolbar {
+    padding: 10px 12px;
+  }
+
+  .live-agents {
+    gap: 10px;
+    font-size: 0.62rem;
+    flex-wrap: wrap;
+  }
+
+  .live-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .live-updated {
+    font-size: 0.58rem;
+  }
+
+  .live-refresh-btn {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .page-end-actions {
+    padding: 0 12px 22px;
+  }
+
+  .page-top-btn {
+    width: 100%;
+    min-height: 44px;
+  }
+
+}
+

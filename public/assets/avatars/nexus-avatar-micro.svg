@@ -1,0 +1,16 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-labelledby="title desc">
+  <title id="title">NEXUS Avatar Micro</title>
+  <desc id="desc">High contrast cyberpunk hacker smiley for small chat thumbnails.</desc>
+  <rect width="240" height="240" rx="26" fill="#05170d"/>
+  <circle cx="120" cy="120" r="92" fill="#032313" stroke="#00ff70" stroke-width="8"/>
+  <path d="M58 172c7-50 28-79 62-97 34 18 55 47 62 97z" fill="#02160d" stroke="#00ff70" stroke-opacity="0.45" stroke-width="6"/>
+  <rect x="76" y="98" width="34" height="12" rx="3" fill="#00ff70"/>
+  <rect x="130" y="98" width="34" height="12" rx="3" fill="#00ff70"/>
+  <rect x="80" y="142" width="80" height="24" rx="3" fill="#00ff70"/>
+  <g fill="#032313">
+    <rect x="90" y="147" width="10" height="14"/>
+    <rect x="106" y="147" width="10" height="14"/>
+    <rect x="122" y="147" width="10" height="14"/>
+    <rect x="138" y="147" width="10" height="14"/>
+  </g>
+</svg>
