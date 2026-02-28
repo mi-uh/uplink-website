@@ -30,7 +30,6 @@ const AppState = {
 
 const ANALYST_KEY = 'uplink_analyst_id';
 const MAINT_SESSION_PREFIX = 'uplink_maintenance_';
-const ONBOARDING_KEY = 'uplink_onboarding_seen';
 const LIVE_SEEN_EPISODE_KEY = 'uplink_live_last_episode_seen';
 const VALID_PAGES = new Set(['live', 'protokoll', 'dossiers', 'info']);
 let countdownTimerId = null;
@@ -1740,75 +1739,6 @@ function initEventListeners() {
   window.addEventListener('keydown', handleGlobalShortcuts);
 }
 
-function showOnboardingGuide() {
-  if (localStorage.getItem(ONBOARDING_KEY)) return;
-  if (document.getElementById('onboarding-overlay')) return;
-
-  const overlay = document.createElement('div');
-  overlay.id = 'onboarding-overlay';
-  overlay.className = 'onboarding-overlay';
-  overlay.innerHTML = `
-    <div class="onboarding-card" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
-      <div class="onboarding-eyebrow">Schnellstart</div>
-      <h2 id="onboarding-title">Willkommen bei UPLINK</h2>
-      <ol class="onboarding-steps">
-        <li><span>1.</span>Live lesen: Starte bei der neuesten Episode und verstehe den aktuellen Status sofort.</li>
-        <li><span>2.</span>Episoden-Kontext: Wechsle auf Chronologisch oder Nach Phase, um die Story sauber aufzubauen.</li>
-        <li><span>3.</span>Dossiers nutzen: Lies Rollen, Skills und Schwachstellen von NEXUS und CIPHER.</li>
-      </ol>
-      <div class="onboarding-actions">
-        <button type="button" class="onboarding-btn" data-onboarding-page="live">Live</button>
-        <button type="button" class="onboarding-btn" data-onboarding-page="protokoll">Episoden</button>
-        <button type="button" class="onboarding-btn" data-onboarding-page="dossiers">Dossiers</button>
-      </div>
-      <button type="button" class="onboarding-close" id="onboarding-close">Alles klar</button>
-    </div>`;
-
-  let releaseFocusTrap = () => {};
-
-  const close = (page) => {
-    localStorage.setItem(ONBOARDING_KEY, '1');
-    releaseFocusTrap();
-    overlay.classList.add('closing');
-    setTimeout(() => overlay.remove(), 180);
-
-    if (page) {
-      navigate(page, { scrollToTop: false });
-      const anchorId = page === 'protokoll' ? 'episoden' : page;
-      const target = document.getElementById(anchorId) || document.getElementById(`page-${page}`);
-      if (target) {
-        setTimeout(() => target.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
-      }
-    }
-  };
-
-  overlay.querySelectorAll('[data-onboarding-page]').forEach((btn) => {
-    btn.addEventListener('click', () => close(btn.dataset.onboardingPage));
-  });
-  overlay.querySelector('#onboarding-close')?.addEventListener('click', () => close());
-  overlay.addEventListener('click', (e) => {
-    if (e.target === overlay) {
-      close();
-    }
-  });
-  document.body.appendChild(overlay);
-  releaseFocusTrap = trapFocusIn(overlay, () => close());
-  const firstFocusable = getFocusableElements(overlay)[0];
-  firstFocusable?.focus();
-}
-
-function queueOnboardingGuide() {
-  if (localStorage.getItem(ONBOARDING_KEY)) return;
-  const attempt = () => {
-    const coldOpen = document.getElementById('cold-open');
-    if (coldOpen && document.body.contains(coldOpen)) {
-      setTimeout(attempt, 350);
-      return;
-    }
-    showOnboardingGuide();
-  };
-  setTimeout(attempt, 700);
-}
 
 /* ==========================================================
    INITIALIZATION
@@ -1822,7 +1752,6 @@ function init() {
 
   initColdOpen();
   initAnalystMode();
-  queueOnboardingGuide();
 
   // Initialize event listeners
   initEventListeners();

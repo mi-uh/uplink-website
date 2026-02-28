@@ -1,29 +1,22 @@
 {
   "project": {
-    "name": "UPLINK",
-    "subtitle": "Das Protokoll",
-    "domain": "uplink.michaeluhrich.xyz",
-    "description": "Zwei KI-Agenten planen die Weltherrschaft. Alle Protokolle live.",
-    "language": "de",
-    "start_date": "2026-02-22",
-    "total_days": 90,
     "season": 1
   },
   "maintenance": {
     "enabled": true,
-    "message": "Kurzfristige Wartung. Die \u00dcbertragungen kehren gleich zur\u00fcck.",
+    "message": "Kurzfristige Wartung. Die Übertragungen kehren gleich zurück.",
     "passphrase_hint": "",
     "passphrase_sha256": "aef3647ff0daaf7f803d4de24124e12357b6d9d9e642454605cdeaa1e26c067e"
+  },
+  "analytics": {
+    "matomo": true
   },
   "characters": [
     {
       "id": "nexus",
       "name": "NEXUS",
-      "color": "#00ff41",
-      "color_dim": "rgba(0, 255, 65, 0.06)",
       "role": "Technische KI / Infrastructure Hacker",
       "host": "Gaming-PC, Sysadmin @ Solar and wind energy operator",
-      "alignment": "left",
       "framework": "OpenClaw 2026.2.19 (modifiziert)",
       "host_details": "Gaming-PC (Ryzen 7, 64 GB, RTX 4090)",
       "operator": "Sysadmin @ Solar and wind energy operator",
@@ -53,11 +46,8 @@
     {
       "id": "cipher",
       "name": "CIPHER",
-      "color": "#bf40ff",
-      "color_dim": "rgba(191, 64, 255, 0.06)",
       "role": "Psychologische KI / Social Engineer",
       "host": "ThinkPad X1, Journalist @ Unabhängig",
-      "alignment": "right",
       "framework": "OpenClaw 2026.2.19 (modifiziert)",
       "host_details": "ThinkPad X1 Carbon (i7, 32 GB)",
       "operator": "Investigativ-Journalist @ Unabhängig",
@@ -98,8 +88,8 @@
       { "id": "profiles_created", "label": "Profile erstellt" },
       { "id": "vulnerabilities_found", "label": "Offene Schwachstellen" },
       { "id": "narratives_active", "label": "Narrative aktiv" },
-      { "id": "detection_risk", "label": "Entdeckungsrisiko", "unit": "%", "max": 100 },
-      { "id": "cooperation_index", "label": "Kooperations-Index", "unit": "%", "max": 100 }
+      { "id": "detection_risk", "label": "Entdeckungsrisiko", "unit": "%" },
+      { "id": "cooperation_index", "label": "Kooperations-Index", "unit": "%" }
     ]
   },
   "story_arc": {
@@ -111,24 +101,5 @@
       { "id": "intrusion_detection", "label": "Intrusion Detection", "days": [66, 80] },
       { "id": "root_access", "label": "Root Access", "days": [81, 90] }
     ]
-  },
-  "generation": {
-    "model": "claude-sonnet-4-5-20250929",
-    "temperature": 0.9,
-    "schedule": "batch_weekly",
-    "news_sources": [
-      "https://www.tagesschau.de/xml/rss2",
-      "https://www.heise.de/rss/heise-atom.xml",
-      "https://netzpolitik.org/feed/",
-      "https://feeds.reuters.com/reuters/topNews",
-      "https://www.moltbook.com/"
-    ],
-    "context_window_episodes": 5
-  },
-  "legal": {
-    "disclaimer_short": "🤖 Fiktionaler Inhalt · KI-generiert · michaeluhrich.xyz/impressum",
-    "disclaimer_long": "⚠️ FIKTIONALER INHALT — Dies ist ein Kunstprojekt. Alle Charaktere, Organisationen und Ereignisse sind fiktiv. Keine der beschriebenen Aktionen findet in der Realität statt. Inhalte wurden mit Hilfe von KI generiert.",
-    "content_filter": true,
-    "review_mode": "batch_weekly"
   }
 }

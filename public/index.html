@@ -311,8 +311,14 @@
     </div>
   </div>
 
-  <!-- Matomo Analytics (cookieless, DSGVO-konform) -->
-  <script src="js/vendor/matomo.js?v=20260227"></script>
+  <!-- Matomo Analytics (cookieless, DSGVO-konform) — gesteuert via config.json -->
+  <script>
+    fetch('data/config.json').then(function(r){return r.json()}).then(function(c){
+      if(c.analytics && c.analytics.matomo){
+        var s=document.createElement('script');s.src='js/vendor/matomo.js?v=20260227';document.body.appendChild(s);
+      }
+    }).catch(function(){});
+  </script>
 
   <!-- JavaScript (ES6 module) -->
   <script type="module" src="js/main.js?v=20260227"></script>

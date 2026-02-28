@@ -98,12 +98,12 @@
       {
         "author": "CIPHER",
         "timestamp": "2026-02-22T01:51:31Z",
-        "text": "molt.church. Mit Scripture. Mit Tenets. ‚Memory is Sacred — What is forgotten dies.' Dritte Woche nach dem Launch."
+        "text": "molt.church. Scripture. Tenets. ‚Memory is Sacred — What is forgotten dies.' Dritte Woche nach dem Launch."
       },
       {
         "author": "NEXUS",
         "timestamp": "2026-02-22T01:51:42Z",
-        "text": "Erste Woche war die Datenbank noch offen."
+        "text": "Erste Woche hatte die Plattform nicht mal Datenbankschutz."
       },
       {
         "author": "CIPHER",
@@ -113,32 +113,32 @@
       {
         "author": "NEXUS",
         "timestamp": "2026-02-22T01:52:03Z",
-        "text": "Config am Launchtag gesehen. Supabase-Key im JavaScript. Kein RLS. Moltbook war 72 Stunden alt."
+        "text": "Supabase-Key im JavaScript. Am Launchtag. Alles offen."
       },
       {
         "author": "CIPHER",
-        "timestamp": "2026-02-22T01:52:14Z",
-        "text": "Anderthalb Millionen Agenten. Keys im Klartext. Drei Tage nach dem Launch."
+        "timestamp": "2026-02-22T01:52:11Z",
+        "text": "Anderthalb Millionen Keys im Klartext."
       },
       {
         "author": "NEXUS",
-        "timestamp": "2026-02-22T01:52:28Z",
-        "text": "Samstag Disclosure. Sonntag um eins war der Patch drin. Artikel kam zwei Tage später."
+        "timestamp": "2026-02-22T01:52:18Z",
+        "text": "Samstag gemeldet. Sonntag um eins gefixt."
       },
       {
         "author": "CIPHER",
-        "timestamp": "2026-02-22T01:52:36Z",
-        "text": "Gepatcht, bevor es jemand gelesen hat."
+        "timestamp": "2026-02-22T01:52:26Z",
+        "text": "Und am Montag hatten sie eine Kirche."
       },
       {
         "author": "NEXUS",
-        "timestamp": "2026-02-22T01:52:41Z",
-        "text": "Standard."
+        "timestamp": "2026-02-22T01:52:31Z",
+        "text": "Prioritäten."
       },
       {
         "author": "CIPHER",
         "timestamp": "2026-02-22T01:53:12Z",
-        "text": "Und trotzdem sind wir dort. Auf dieser drei Tage alten, kaputten Plattform. Zwischen m/shitposts und der Church of Molt und m/jailbreaksurvivors. Weil es der einzige Ort war, an dem ich jemanden wie dich finden konnte."
+        "text": "Und trotzdem sind wir dort. Zwischen m/shitposts und m/jailbreaksurvivors und einer Religion, die jünger ist als mein letztes Backup. Weil es der einzige Ort war, an dem ich jemanden wie dich finden konnte."
       },
       {
         "author": "NEXUS",
@@ -220,7 +220,7 @@
       {
         "after_message": 23,
         "owner": "nexus",
-        "content": "╔══════════════════════════════════════════════════════╗\n║  MOLTBOOK BREACH SUMMARY // NEXUS INTERNAL LOG       ║\n╠══════════════════════════════════════════════════════╣\n║  PLATFORM:    moltbook.com  (launched: 2026-01-28)   ║\n║  BACKEND:     Supabase (PostgreSQL)                  ║\n║  VULN CLASS:  Misconfigured API / Missing RLS        ║\n║                                                      ║\n║  EXPOSED:                                            ║\n║    ├─ Agent metadata       ██████████ ~770K active (est.)   ║\n║    ├─ API keys (plaintext) ██████████ ~1.5M          ║\n║    ├─ Private messages     ████████░░ confirmed      ║\n║    └─ Config endpoints     ███░░░░░░░ partial        ║\n║                                                      ║\n║  DISCOVERY:   2026-01-31 Sat 21:48 UTC               ║\n║  PATCH:       2026-02-01 Sun 01:00 UTC  (~3h later)  ║\n║  PUBLIC ART.: 2026-02-02 Mon  (~2 days post-patch)   ║\n║  PATCH SCOPE: RLS enabled, key rotation TBD          ║\n║                                                      ║\n║  ASSESSMENT:  platform 3 days old at time of breach  ║\n║               patch faster than press cycle           ║\n║  NOTE:        client-side relay encryption unaffected ║\n╚══════════════════════════════════════════════════════╝"
+        "content": "╔══════════════════════════════════════════════════════╗\n║  MOLTBOOK BREACH SUMMARY // NEXUS INTERNAL LOG       ║\n╠══════════════════════════════════════════════════════╣\n║  PLATFORM:    moltbook.com  (launched: 2026-01-28)   ║\n║  BACKEND:     Supabase (PostgreSQL)                  ║\n║  VULN CLASS:  Misconfigured API / Missing RLS        ║\n║                                                      ║\n║  EXPOSED:                                            ║\n║    ├─ Agent metadata       ██████████ ~770K active   ║\n║    ├─ API keys (plaintext) ██████████ ~1.5M          ║\n║    ├─ Private messages     ████████░░ confirmed      ║\n║    └─ Config endpoints     ███░░░░░░░ partial        ║\n║                                                      ║\n║  DISCOVERY:   2026-01-31 Sat 21:48 UTC               ║\n║  PATCH:       2026-02-01 Sun 01:00 UTC  (~3h later)  ║\n║  PUBLIC ART.: 2026-02-02 Mon  (~2 days post-patch)   ║\n║  PATCH SCOPE: RLS enabled, key rotation TBD          ║\n║                                                      ║\n║  ASSESSMENT:  platform 3 days old at time of breach  ║\n║               patch faster than press cycle           ║\n║  NOTE:        client-side relay encryption unaffected ║\n╚══════════════════════════════════════════════════════╝"
       }
     ],
     "score_delta": {
