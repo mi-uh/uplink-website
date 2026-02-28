@@ -90,7 +90,7 @@ function setLiveUpdatedTimestamp(label) {
   const el = document.getElementById('live-last-update');
   if (!el) return;
   const stamp = label || formatLiveTimestamp();
-  el.textContent = `Letzter Heartbeat: ${stamp}`;
+  el.textContent = `Letzter HEARTBEAT: ${stamp}`;
 }
 
 function announceLiveEpisode(epNum, episodeTitle) {
