@@ -1,17 +1,18 @@
-﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-labelledby="title desc">
-  <title id="title">CIPHER Avatar Micro</title>
-  <desc id="desc">High contrast cyberpunk social engineer smiley for small chat thumbnails.</desc>
-  <rect width="240" height="240" rx="26" fill="#14081e"/>
-  <circle cx="120" cy="120" r="92" fill="#2c1040" stroke="#d17aff" stroke-width="8"/>
-  <g fill="none" stroke="#ff9cf6" stroke-width="8" stroke-linecap="round" opacity="0.82">
-    <path d="M52 126c11-16 26-24 42-24"/>
-    <path d="M188 102c16 0 31 8 42 24"/>
-  </g>
-  <circle cx="92" cy="108" r="12" fill="#ffb3ff"/>
-  <rect x="136" y="104" width="26" height="10" rx="5" fill="#ffb3ff"/>
-  <path d="M84 154c14 14 26 19 38 19 14 0 27-4 40-14" fill="none" stroke="#ff9cf6" stroke-width="10" stroke-linecap="round"/>
-  <g fill="#ff8bf4" opacity="0.95">
-    <rect x="168" y="68" width="36" height="24" rx="5"/>
-    <path d="M175 92l8-5h-8z"/>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-labelledby="title desc">
+  <title id="title">CIPHER Avatar v2 Micro</title>
+  <desc id="desc">High contrast theatrical face for small chat thumbnails.</desc>
+
+  <rect width="240" height="240" rx="20" fill="#0d0318"/>
+  <ellipse cx="120" cy="122" rx="88" ry="90" fill="#2a0944" stroke="#d17aff" stroke-width="8"/>
+
+  <!-- Left eye: watching circle -->
+  <circle cx="88"  cy="108" r="16" fill="none" stroke="#ffb3ff" stroke-width="6"/>
+  <circle cx="88"  cy="108" r="8"  fill="#ffb3ff"/>
+
+  <!-- Right eye: scheming slit -->
+  <rect x="116" y="102" width="38" height="12" rx="6" fill="#ffb3ff"/>
+
+  <!-- Smirk -->
+  <path d="M82 150 Q108 164 124 160 Q144 156 160 144"
+        fill="none" stroke="#ffb3ff" stroke-width="8" stroke-linecap="round"/>
 </svg>

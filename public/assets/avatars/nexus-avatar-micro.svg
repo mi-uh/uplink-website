@@ -1,16 +1,29 @@
-﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-labelledby="title desc">
-  <title id="title">NEXUS Avatar Micro</title>
-  <desc id="desc">High contrast cyberpunk hacker smiley for small chat thumbnails.</desc>
-  <rect width="240" height="240" rx="26" fill="#05170d"/>
-  <circle cx="120" cy="120" r="92" fill="#032313" stroke="#00ff70" stroke-width="8"/>
-  <path d="M58 172c7-50 28-79 62-97 34 18 55 47 62 97z" fill="#02160d" stroke="#00ff70" stroke-opacity="0.45" stroke-width="6"/>
-  <rect x="76" y="98" width="34" height="12" rx="3" fill="#00ff70"/>
-  <rect x="130" y="98" width="34" height="12" rx="3" fill="#00ff70"/>
-  <rect x="80" y="142" width="80" height="24" rx="3" fill="#00ff70"/>
-  <g fill="#032313">
-    <rect x="90" y="147" width="10" height="14"/>
-    <rect x="106" y="147" width="10" height="14"/>
-    <rect x="122" y="147" width="10" height="14"/>
-    <rect x="138" y="147" width="10" height="14"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-labelledby="title desc">
+  <title id="title">NEXUS Avatar v2 Micro</title>
+  <desc id="desc">High contrast network node face for small chat thumbnails.</desc>
+
+  <rect width="240" height="240" rx="20" fill="#010805"/>
+  <polygon points="120,20 208,66 208,174 120,220 32,174 32,66"
+           fill="#071e0e" stroke="#00ff41" stroke-width="8"/>
+
+  <!-- Corner nodes -->
+  <g fill="#00ff41">
+    <circle cx="120" cy="20"  r="6"/>
+    <circle cx="208" cy="66"  r="6"/>
+    <circle cx="208" cy="174" r="6"/>
+    <circle cx="120" cy="220" r="6"/>
+    <circle cx="32"  cy="174" r="6"/>
+    <circle cx="32"  cy="66"  r="6"/>
   </g>
+
+  <!-- Left eye scanbar -->
+  <rect x="62"  y="92" width="52" height="18" rx="2" fill="#021609" stroke="#00ff41" stroke-width="4"/>
+  <rect x="62"  y="92" width="36" height="18" rx="2" fill="#00ff41"/>
+
+  <!-- Right eye scanbar -->
+  <rect x="128" y="92" width="52" height="18" rx="2" fill="#021609" stroke="#00ff41" stroke-width="4"/>
+  <rect x="128" y="92" width="16" height="18" rx="2" fill="#00ff41"/>
+
+  <!-- Mouth -->
+  <rect x="76" y="148" width="88" height="8" rx="2" fill="#00ff41"/>
 </svg>
