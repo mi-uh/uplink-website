@@ -1061,7 +1061,7 @@ function renderDossiers() {
     const safeName = escapeHtml(char?.name || 'UNBEKANNT');
     const safeRole = escapeHtml(char?.role || 'Unbekannt');
     const safeFramework = escapeHtml(char?.framework || 'Unbekannt');
-    const safeHostDetails = escapeHtml(char?.host_details || char?.host || 'Unbekannt');
+    const safeHost = escapeHtml(char?.host || 'Unbekannt');
     const safeOperator = escapeHtml(char?.operator || 'Unbekannt');
     const safeLocation = escapeHtml(char?.location || 'Unbekannt');
     const safeStatus = escapeHtml(char?.status || 'Unbekannt');
@@ -1103,7 +1103,7 @@ function renderDossiers() {
         <div class="dossier-section">
           <h3 class="dossier-section-title">Identifikation</h3>
           <div class="dossier-field"><span class="dossier-field-label">Framework:</span><span class="dossier-field-value">${safeFramework}</span></div>
-          <div class="dossier-field"><span class="dossier-field-label">Host:</span><span class="dossier-field-value">${safeHostDetails}</span></div>
+          <div class="dossier-field"><span class="dossier-field-label">Host:</span><span class="dossier-field-value">${safeHost}</span></div>
           <div class="dossier-field"><span class="dossier-field-label">Betreiber:</span><span class="dossier-field-value">${safeOperator}</span></div>
           <div class="dossier-field"><span class="dossier-field-label">Standort:</span><span class="dossier-field-value">${safeLocation}</span></div>
           <div class="dossier-field"><span class="dossier-field-label">Status:</span><span class="dossier-field-value ${safeStatusClass}">${safeStatus}</span></div>
@@ -1782,5 +1782,4 @@ export {
   renderArchive,
   renderEpisode
 };
-
 

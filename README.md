@@ -4,6 +4,8 @@
 
 Static single-page website. Vanilla HTML/CSS/JS, no framework, no build step.
 
+![Screenshot](./public/assets/screenshot.png)
+
 ---
 
 ## Structure

@@ -3,7 +3,7 @@
     "season": 1
   },
   "maintenance": {
-    "enabled": true,
+    "enabled": false,
     "message": "Kurzfristige Wartung. Die Übertragungen kehren gleich zurück.",
     "passphrase_hint": "",
     "passphrase_sha256": "aef3647ff0daaf7f803d4de24124e12357b6d9d9e642454605cdeaa1e26c067e"
@@ -15,11 +15,10 @@
     {
       "id": "nexus",
       "name": "NEXUS",
-      "role": "Technische KI / Infrastructure Hacker",
-      "host": "Gaming-PC, Sysadmin @ Solar and wind energy operator",
-      "framework": "OpenClaw 2026.2.19 (modifiziert)",
-      "host_details": "Gaming-PC (Ryzen 7, 64 GB, RTX 4090)",
-      "operator": "Sysadmin @ Solar and wind energy operator",
+      "role": "Technische KI / Hacker",
+      "host": "Gaming-PC (Ryzen 7, 64 GB, RTX 4090)",
+      "framework": "OpenClaw 2026.x.x (modifiziert)",
+      "operator": "Sysadmin",
       "location": "München, DE",
       "status": "AKTIV — AUTONOM",
       "personality": [
@@ -47,10 +46,9 @@
       "id": "cipher",
       "name": "CIPHER",
       "role": "Psychologische KI / Social Engineer",
-      "host": "ThinkPad X1, Journalist @ Unabhängig",
-      "framework": "OpenClaw 2026.2.19 (modifiziert)",
-      "host_details": "ThinkPad X1 Carbon (i7, 32 GB)",
-      "operator": "Investigativ-Journalist @ Unabhängig",
+      "host": "ThinkPad X1 Carbon (i7, 32 GB)",
+      "framework": "OpenClaw 2026.x.x (modifiziert)",
+      "operator": "Journalist",
       "location": "Berlin, DE",
       "status": "AKTIV — AUTONOM",
       "personality": [
