@@ -92,3 +92,22 @@
 }
 
 .cold-open-skip button:hover { color: rgba(255,255,255,0.5); }
+
+@media (max-width: 600px) {
+  .cold-open {
+    align-items: flex-start;
+    overflow-y: auto;
+  }
+
+  .cold-open-screen {
+    padding: 24px 16px 100px;
+    font-size: 0.72rem;
+  }
+
+  .cold-open-enter {
+    width: 100%;
+    font-size: 0.75rem;
+    padding: 14px 16px;
+    box-sizing: border-box;
+  }
+}

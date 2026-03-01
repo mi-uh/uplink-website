@@ -68,6 +68,7 @@ function exitColdOpen() {
   overlay.classList.add('hidden');
   document.removeEventListener('keydown', handleKeyDown);
 
+  window.scrollTo(0, 0);
   setTimeout(() => overlay.remove(), 700);
 }
 
@@ -97,7 +98,10 @@ function initColdOpen() {
 
   const lastDelay = coldOpenLines[coldOpenLines.length - 1].delay;
   setTimeout(() => {
-    if (enterBtn) enterBtn.classList.add('is-visible');
+    if (enterBtn) {
+      enterBtn.classList.add('is-visible');
+      enterBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
   }, lastDelay + 600);
 
   if (enterBtn) {
