@@ -342,18 +342,6 @@
   vertical-align: middle;
 }
 
-/* ---- Disclaimer ---- */
-.site-disclaimer {
-  display: inline-block;
-  font-size: 0.72rem;
-  color: rgba(255, 60, 60, 0.4);
-  border: 1px solid rgba(255, 60, 60, 0.1);
-  padding: 3px 8px;
-  border-radius: 2px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  width: fit-content;
-}
 
 .page-anchor {
   display: block;
