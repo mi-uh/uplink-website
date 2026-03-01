@@ -522,7 +522,7 @@ function renderLandingMeta() {
     elEp.textContent = `EP.${String(s.current_episode).padStart(3, '0')} - ${latestEp.title}`;
   }
   if (elPhase && phase) elPhase.textContent = phase.label;
-  if (elDay) elDay.textContent = `Tag ${s.current_day} / ${s.total_days}`;
+  if (elDay) elDay.textContent = `${s.current_day} / ${s.total_days}`;
 }
 
 /* ==========================================================
