@@ -113,6 +113,7 @@
         line-height: 1.6;
         -webkit-overflow-scrolling: touch;
         touch-action: pan-x;
+        box-shadow: inset -28px 0 16px -12px var(--color-bg, #080808);
     }
 
     .terminal-block-wrap {

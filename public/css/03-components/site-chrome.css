@@ -333,6 +333,13 @@
   text-align: center;
 }
 
+.meta-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
 /* Truncate episode value - title can be very long */
 .episode-val {
   max-width: 110px;
