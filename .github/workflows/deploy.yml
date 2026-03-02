@@ -43,7 +43,7 @@ jobs:
             public/css/06-responsive.css
           do
             test -f "$f"
-            cat "$f" >> "$BUNDLE"
+            sed '1s/^\xEF\xBB\xBF//' "$f" >> "$BUNDLE"
             printf '\n' >> "$BUNDLE"
           done
 
