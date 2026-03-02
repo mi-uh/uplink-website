@@ -17,9 +17,14 @@ jobs:
         key: ${{ secrets.VPS_SSH_KEY }}
         script: |
           cd /srv/docker/uplink/uplink-website
+          set -euo pipefail
+
           git pull origin main
 
-          cat \
+          BUNDLE=public/css/bundle.css
+          : > "$BUNDLE"
+
+          for f in \
             public/css/00-reset.css \
             public/css/01-layout.css \
             public/css/02-typography.css \
@@ -35,7 +40,11 @@ jobs:
             public/css/03-components/info.css \
             public/css/04-effects.css \
             public/css/05-themes.css \
-            public/css/06-responsive.css \
-            > public/css/bundle.css
+            public/css/06-responsive.css
+          do
+            test -f "$f"
+            cat "$f" >> "$BUNDLE"
+            printf '\n' >> "$BUNDLE"
+          done
 
           rsync -av --delete --exclude='data/dialogs.json' --exclude='data/stats.json' ./public/ /srv/docker/data/uplink/public/
