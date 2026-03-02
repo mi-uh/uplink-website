@@ -38,7 +38,61 @@
   <link rel="alternate" hreflang="x-default" href="https://uplink.michaeluhrich.xyz/">
   
   <!-- CSS -->
-  <link rel="stylesheet" href="css/bundle.css">
+  <link rel="stylesheet" href="/css/bundle.css">
+  <script>
+    (() => {
+      const FALLBACK_STYLES = [
+        '/css/00-reset.css',
+        '/css/01-layout.css',
+        '/css/02-typography.css',
+        '/css/03-components/site-chrome.css',
+        '/css/03-components/navigation.css',
+        '/css/03-components/cold-open.css',
+        '/css/03-components/landing.css',
+        '/css/03-components/dashboard.css',
+        '/css/03-components/timeline.css',
+        '/css/03-components/analyst.css',
+        '/css/03-components/archive.css',
+        '/css/03-components/dossiers.css',
+        '/css/03-components/info.css',
+        '/css/04-effects.css',
+        '/css/05-themes.css',
+        '/css/06-responsive.css'
+      ];
+
+      const ensureStyles = () => {
+        try {
+          const probe = document.createElement('div');
+          probe.className = 'timeline';
+          probe.style.position = 'absolute';
+          probe.style.visibility = 'hidden';
+          document.body.appendChild(probe);
+
+          const style = window.getComputedStyle(probe);
+          const hasMaxWidth = style.maxWidth && style.maxWidth !== 'none' && style.maxWidth !== '0px';
+          probe.remove();
+
+          if (hasMaxWidth) return;
+
+          console.warn('bundle.css seems missing or incomplete, loading CSS fallback chain');
+          FALLBACK_STYLES.forEach((href) => {
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = href;
+            document.head.appendChild(link);
+          });
+        } catch (error) {
+          console.error('Fallback CSS loader failed', error);
+        }
+      };
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', ensureStyles, { once: true });
+      } else {
+        ensureStyles();
+      }
+    })();
+  </script>
   <!-- Structured Data (JSON-LD) -->
   <script type="application/ld+json">
   {
