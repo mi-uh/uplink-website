@@ -19,22 +19,6 @@ jobs:
           cd /srv/docker/uplink/uplink-website
           git pull origin main
 
-          cat public/css/00-reset.css \
-              public/css/01-layout.css \
-              public/css/02-typography.css \
-              public/css/03-components/site-chrome.css \
-              public/css/03-components/navigation.css \
-              public/css/03-components/cold-open.css \
-              public/css/03-components/landing.css \
-              public/css/03-components/dashboard.css \
-              public/css/03-components/timeline.css \
-              public/css/03-components/analyst.css \
-              public/css/03-components/archive.css \
-              public/css/03-components/dossiers.css \
-              public/css/03-components/info.css \
-              public/css/04-effects.css \
-              public/css/05-themes.css \
-              public/css/06-responsive.css \
-              > public/css/bundle.css
+          cat public/css/00-reset.css public/css/01-layout.css public/css/02-typography.css public/css/03-components/site-chrome.css public/css/03-components/navigation.css public/css/03-components/cold-open.css public/css/03-components/landing.css public/css/03-components/dashboard.css public/css/03-components/timeline.css public/css/03-components/analyst.css public/css/03-components/archive.css public/css/03-components/dossiers.css public/css/03-components/info.css public/css/04-effects.css public/css/05-themes.css public/css/06-responsive.css > public/css/bundle.css
 
           rsync -av --delete --exclude='data/dialogs.json' --exclude='data/stats.json' ./public/ /srv/docker/data/uplink/public/
