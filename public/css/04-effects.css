@@ -47,11 +47,11 @@
 /* Arc pulse animation (already included in dashboard.css but kept here for reference) */
 @keyframes arcPulse {
     0%, 100% {
-        width: 30%;
+        transform: scaleX(0.30);
         opacity: 0.6;
     }
     50% {
-        width: 60%;
+        transform: scaleX(0.60);
         opacity: 1;
     }
 }

@@ -3,7 +3,7 @@
 https://uplink.michaeluhrich.xyz
 
 Static single-page web app for serialized AI-fiction episodes.
-Vanilla HTML/CSS/JS only. No framework, no TypeScript, no build step.
+Vanilla HTML/CSS/JS only. No framework, no TypeScript. CSS is bundled on deploy.
 
 ![Screenshot](./public/assets/screenshot.png)
 
@@ -16,7 +16,29 @@ Vanilla HTML/CSS/JS only. No framework, no TypeScript, no build step.
 
 ## Quick Start
 
-Serve `public/` with any static server:
+Generate the CSS bundle first (only needed once locally, runs automatically on deploy):
+
+```bash
+cat public/css/00-reset.css \
+    public/css/01-layout.css \
+    public/css/02-typography.css \
+    public/css/03-components/site-chrome.css \
+    public/css/03-components/navigation.css \
+    public/css/03-components/cold-open.css \
+    public/css/03-components/landing.css \
+    public/css/03-components/dashboard.css \
+    public/css/03-components/timeline.css \
+    public/css/03-components/analyst.css \
+    public/css/03-components/archive.css \
+    public/css/03-components/dossiers.css \
+    public/css/03-components/info.css \
+    public/css/04-effects.css \
+    public/css/05-themes.css \
+    public/css/06-responsive.css \
+    > public/css/bundle.css
+```
+
+Then serve `public/` with any static server:
 
 ```bash
 npx serve public
