@@ -59,3 +59,8 @@ AGENTS.md
 
 # Deploy secrets (Template .env.example ist erlaubt, echte .env nicht)
 .deploy/.env
+
+# Generated static artifacts (built during deploy/local build)
+public/*.html
+public/sitemap.xml
+public/css/bundle.css
