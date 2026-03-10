@@ -98,6 +98,7 @@ Open: `http://localhost:8000/`
 
 - Default builder inputs are `data/*.json`.
 - If maintenance mode is enabled in `config.json`, episode pages are not generated and content is withheld from static HTML.
+- Set maintenance unlock hash via environment variable `UPLINK_MAINTENANCE_SHA256` (or `--maintenance-hash`) and keep `data/config.json` hash empty in Git.
 
 ## License
 

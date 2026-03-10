@@ -203,6 +203,15 @@ function setStaticEpisodeView(order) {
   if (archive) archive.hidden = order !== 'phase';
 }
 
+function getInitialEpisodeView() {
+  const params = new URLSearchParams(window.location.search);
+  const view = (params.get('view') || '').toLowerCase();
+  if (view === 'chrono' || view === 'phase' || view === 'newest') {
+    return view;
+  }
+  return 'newest';
+}
+
 /* ==========================================================
    SPARKLINE CHART
    ========================================================== */
@@ -1510,7 +1519,7 @@ async function init() {
   const finishStaticInit = () => {
     initStaticPageState();
     if (CURRENT_STATIC_PAGE === 'protokoll') {
-      setStaticEpisodeView('newest');
+      setStaticEpisodeView(getInitialEpisodeView());
     }
   };
   const finalizePageSetup = () => {

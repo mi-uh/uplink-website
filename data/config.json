@@ -6,7 +6,7 @@
     "enabled": false,
     "message": "Kurzfristige Wartung. Die Übertragungen kehren gleich zurück.",
     "passphrase_hint": "",
-    "passphrase_sha256": "aef3647ff0daaf7f803d4de24124e12357b6d9d9e642454605cdeaa1e26c067e"
+    "passphrase_sha256": ""
   },
   "analytics": {
     "matomo": true

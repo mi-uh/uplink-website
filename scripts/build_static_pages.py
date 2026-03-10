@@ -7,6 +7,7 @@ import argparse
 import base64
 import html
 import json
+import os
 import re
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -66,6 +67,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--stats", default=str(DEFAULT_STATS_PATH))
     parser.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_DIR))
     parser.add_argument("--base-url", default=DEFAULT_BASE_URL)
+    parser.add_argument(
+        "--maintenance-hash",
+        default=os.getenv("UPLINK_MAINTENANCE_SHA256", ""),
+        help="Optional SHA-256 hex hash for maintenance unlock (overrides config).",
+    )
     return parser.parse_args()
 
 
@@ -235,6 +241,23 @@ def parse_sha256_hex(value: Any) -> bytes | None:
         return bytes.fromhex(candidate)
     except ValueError:
         return None
+
+
+def normalize_sha256_hex(value: Any) -> str:
+    candidate = str(value or "").strip().lower()
+    if re.fullmatch(r"[0-9a-f]{64}", candidate):
+        return candidate
+    return ""
+
+
+def apply_maintenance_hash_override(config: dict[str, Any], override_hash: Any) -> None:
+    maintenance = config.setdefault("maintenance", {})
+    normalized_override = normalize_sha256_hex(override_hash)
+    if normalized_override:
+        maintenance["passphrase_sha256"] = normalized_override
+        return
+    # Default-safe for versioned config: never leak hash from repository content.
+    maintenance["passphrase_sha256"] = ""
 
 
 def xor_encrypt_to_base64(plaintext: str, key_bytes: bytes) -> str:
@@ -1313,12 +1336,21 @@ def build_episode_page_main(
         if has_next
         else '<a class="cta secondary" href="/episoden.html">Alle Episoden</a>'
     )
+    view_switch = (
+        '<div class="proto-controls" aria-label="Episodenansicht">'
+        '<a class="ctrl-btn" href="/episoden.html?view=newest#episoden">Neueste</a>'
+        '<a class="ctrl-btn" href="/episoden.html?view=chrono#episoden">Chronologisch</a>'
+        '<a class="ctrl-btn" href="/episoden.html?view=phase#episoden">Nach Phase</a>'
+        '<span class="ctrl-separator" aria-hidden="true"></span>'
+        "</div>"
+    )
     return (
         '<section class="page active page-episode" id="page-episode">'
         '<header class="page-header"><div><span class="page-eyebrow">Episode</span>'
         f'<h2>EP.{pad_number(ep_num)} &mdash; {escape(episode.get("title", ""))}</h2>'
         f'<p>Ver&ouml;ffentlicht am {format_date(episode.get("date"))}.</p>'
         '</div></header>'
+        f"{view_switch}"
         f'<div class="timeline" id="timeline-episode">{render_episode(episode, config, base_url, include_id=False, include_state_cards=False)}</div>'
         f'<div class="site-ctas page-end-actions">{prev_link}{next_link}</div>'
         "</section>"
@@ -1484,6 +1516,7 @@ def main() -> None:
     base_url = args.base_url.rstrip("/")
 
     config = load_json(config_path)
+    apply_maintenance_hash_override(config, args.maintenance_hash)
     episodes = normalize_episodes(load_json(dialogs_path))
     stats = load_json(stats_path)
     maintenance_enabled = is_maintenance_enabled(config)
