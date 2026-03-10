@@ -889,7 +889,7 @@ def render_archive(
                 )
                 episodes_in_phase.append(
                     '<a class="arc-episode" '
-                    f'href="{page_path(ep_num)}" '
+                    f'href="{page_path(ep_num)}#episoden" '
                     f'data-ep-num="{escape(episode.get("episode"))}">'
                     f'<span class="arc-ep-num">EP.{pad_number(ep_num)}</span>'
                     '<div class="arc-episode-main">'
@@ -1291,7 +1291,6 @@ def build_episode_page_main(
         '<span id="episoden" class="page-anchor" aria-hidden="true"></span>'
         '<header class="page-header"><div><span class="page-eyebrow">Episode</span>'
         f'<h2>EP.{pad_number(ep_num)} &mdash; {escape(episode.get("title", ""))}</h2>'
-        f'<p>Ver&ouml;ffentlicht am {format_date(episode.get("date"))}.</p>'
         '</div></header>'
         f"{view_switch}"
         f'<div class="timeline" id="timeline-episode">{render_episode(episode, config, base_url, include_id=False, include_state_cards=False)}</div>'
