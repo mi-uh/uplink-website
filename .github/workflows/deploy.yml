@@ -19,6 +19,9 @@ jobs:
           cd /srv/docker/uplink/uplink-website
           set -euo pipefail
 
+          # Prevent git pull failure when an old generated bundle exists as untracked file.
+          rm -f public/css/bundle.css
+
           git pull origin main
 
           BUNDLE=public/css/bundle.css
