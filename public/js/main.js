@@ -8,13 +8,6 @@ import { formatDate, getTimestamp, formatTime, formatDateTime } from './utils/da
 import { padNumber, truncate } from './utils/text.js';
 import { initColdOpen } from './features/cold-open.js';
 
-// Import services
-import EpisodeService from './services/EpisodeService.js';
-import StatsService from './services/StatsService.js';
-
-// Import core
-import EventBus from './core/EventBus.js';
-
 /* ==========================================================
    APPLICATION STATE
    ========================================================== */
@@ -30,9 +23,21 @@ const AppState = {
 
 const ANALYST_KEY = 'uplink_analyst_id';
 const MAINT_SESSION_PREFIX = 'uplink_maintenance_';
-const LIVE_SEEN_EPISODE_KEY = 'uplink_live_last_episode_seen';
 const VALID_PAGES = new Set(['live', 'protokoll', 'dossiers', 'info']);
-let countdownTimerId = null;
+const PAGE_URLS = {
+  live: '/',
+  protokoll: '/episoden.html',
+  dossiers: '/dossiers.html',
+  info: '/info.html'
+};
+const CURRENT_STATIC_PAGE = document.body?.dataset?.page || 'live';
+const RUNTIME_CONFIG = window.__UPLINK_RUNTIME__ || {};
+
+function initStaticPageState() {
+  AppState.currentPage = CURRENT_STATIC_PAGE;
+  AppState.isLoading = false;
+  hideLoading();
+}
 
 function getAnalystId() {
   let id = localStorage.getItem(ANALYST_KEY);
@@ -77,36 +82,6 @@ function getMetricCssClass(id, value) {
     return 'good';
   }
   return '';
-}
-
-function formatLiveTimestamp(date = new Date()) {
-  const hh = String(date.getHours()).padStart(2, '0');
-  const mm = String(date.getMinutes()).padStart(2, '0');
-  const ss = String(date.getSeconds()).padStart(2, '0');
-  return `${hh}:${mm}:${ss}`;
-}
-
-function setLiveUpdatedTimestamp(label) {
-  const el = document.getElementById('live-last-update');
-  if (!el) return;
-  const stamp = label || formatLiveTimestamp();
-  el.textContent = `Letzter HEARTBEAT: ${stamp}`;
-}
-
-function announceLiveEpisode(epNum, episodeTitle) {
-  const el = document.getElementById('live-announce');
-  if (!el) return;
-
-  const seen = Number(localStorage.getItem(LIVE_SEEN_EPISODE_KEY) || 0);
-  if (seen > 0 && epNum > seen) {
-    el.textContent = `Neue Episode eingetroffen: EP.${padNumber(epNum)} - ${episodeTitle}`;
-    el.hidden = false;
-    setTimeout(() => { el.hidden = true; }, 6000);
-  } else {
-    el.hidden = true;
-  }
-
-  localStorage.setItem(LIVE_SEEN_EPISODE_KEY, String(epNum));
 }
 
 function getFocusableElements(container) {
@@ -177,6 +152,11 @@ function toPercentClass(value) {
   return `pct-${clampPercent(value)}`;
 }
 
+function sortEpisodes(episodes, order = 'newest') {
+  const sorted = Array.isArray(episodes) ? [...episodes] : [];
+  return order === 'newest' ? sorted.reverse() : sorted;
+}
+
 /* ==========================================================
    LOADING OVERLAY
    ========================================================== */
@@ -195,6 +175,32 @@ function hideLoading() {
   if (overlay) {
     overlay.classList.add('loaded');
   }
+}
+
+function setStaticEpisodeView(order) {
+  const btnNewest = $('#btn-newest');
+  const btnChrono = $('#btn-chrono');
+  const btnPhase = $('#btn-phase');
+  const newest = $('#timeline-full');
+  const chrono = $('#timeline-chrono');
+  const archive = $('#archive-content');
+
+  if (btnNewest) {
+    btnNewest.classList.toggle('active', order === 'newest');
+    btnNewest.setAttribute('aria-pressed', String(order === 'newest'));
+  }
+  if (btnChrono) {
+    btnChrono.classList.toggle('active', order === 'chrono');
+    btnChrono.setAttribute('aria-pressed', String(order === 'chrono'));
+  }
+  if (btnPhase) {
+    btnPhase.classList.toggle('active', order === 'phase');
+    btnPhase.setAttribute('aria-pressed', String(order === 'phase'));
+  }
+
+  if (newest) newest.hidden = order !== 'newest';
+  if (chrono) chrono.hidden = order !== 'chrono';
+  if (archive) archive.hidden = order !== 'phase';
 }
 
 /* ==========================================================
@@ -526,72 +532,6 @@ function renderLandingMeta() {
 }
 
 /* ==========================================================
-   COUNTDOWN TO NEXT EPISODE
-   ========================================================== */
-
-function initCountdown() {
-  if (countdownTimerId) {
-    clearInterval(countdownTimerId);
-    countdownTimerId = null;
-  }
-
-  const existing = document.getElementById('countdown-panel');
-  if (existing) existing.remove();
-
-  const targetDateStr = AppState.stats?.next_episode_date;
-  if (!targetDateStr) return;
-
-  const targetDate = new Date(targetDateStr);
-  if (isNaN(targetDate.getTime()) || targetDate <= new Date()) return;
-
-  // Landing: place countdown below status strip (fallback to briefing/header)
-  const statusBar = document.querySelector('.site-status-bar');
-  const landingHost = (statusBar && statusBar.parentElement) || document.querySelector('.site-briefing') || document.querySelector('.site-header');
-  if (landingHost) {
-    const countdownEl = document.createElement('div');
-    countdownEl.className = 'countdown-panel';
-    countdownEl.id = 'countdown-panel';
-    countdownEl.innerHTML = `
-      <div class="countdown-label">Naechste Uebertragung</div>
-      <div class="countdown-timer" id="countdown-timer" aria-live="polite">--</div>
-    `;
-
-    if (statusBar) {
-      statusBar.insertAdjacentElement('afterend', countdownEl);
-    } else {
-      landingHost.appendChild(countdownEl);
-    }
-  }
-
-  function tick() {
-    const now = new Date();
-    const diff = targetDate - now;
-
-    if (diff <= 0) {
-      const timerEl = document.getElementById('countdown-timer');
-      if (timerEl) timerEl.textContent = '// ONLINE';
-      if (countdownTimerId) {
-        clearInterval(countdownTimerId);
-        countdownTimerId = null;
-      }
-      return;
-    }
-
-    const h = Math.floor(diff / 3600000);
-    const m = Math.floor((diff % 3600000) / 60000);
-    const s = Math.floor((diff % 60000) / 1000);
-    const formatted = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-
-    const timerEl = document.getElementById('countdown-timer');
-    if (timerEl) timerEl.textContent = `> ${formatted}`;
-
-  }
-
-  tick();
-  countdownTimerId = setInterval(tick, 1000);
-}
-
-/* ==========================================================
    EPISODE RENDERING
    ========================================================== */
 
@@ -681,7 +621,7 @@ function renderEpisode(episode, container, withId = true) {
 
   const firstText = (episode.messages || []).find(msg => msg && typeof msg.text === 'string' && msg.text.trim())?.text || '';
   const shareSummary = truncate(firstText.replace(/\s+/g, ' ').trim(), 130);
-  const shareUrl = `${window.location.origin}${window.location.pathname}?ep=${epNum}#episoden`;
+  const shareUrl = `${window.location.origin}/episode-${epStr}.html`;
   const shareText = `UPLINK EP.${epStr}: ${episode.title}${shareSummary ? ` - ${shareSummary}` : ''}`;
   const shareHtml = `<div class="episode-share" data-url="${escapeHtml(shareUrl)}" data-share-text="${escapeHtml(shareText)}">
     <span class="episode-share-label">Teilen</span>
@@ -732,19 +672,14 @@ function renderLiveEpisode() {
   container.innerHTML = '';
   
   if (AppState.episodes.length === 0) {
-    setLiveUpdatedTimestamp('--:--:--');
     container.innerHTML = `
       <div class="live-empty">
         <div class="live-empty-title">// Keine Live-Protokolle verfuegbar</div>
-        <p class="live-empty-text">Aktuell liegt noch keine Episode fuer die Live-Ansicht vor. Du kannst neu laden oder ins Archiv wechseln.</p>
+        <p class="live-empty-text">Aktuell liegt noch keine Episode fuer die Live-Ansicht vor. Du kannst ins Archiv wechseln.</p>
         <div class="live-empty-actions">
-          <button type="button" id="live-empty-refresh">Erneut laden</button>
           <button type="button" id="live-empty-archive">Zum Episoden-Archiv</button>
         </div>
       </div>`;
-
-    const retryBtn = document.getElementById('live-empty-refresh');
-    retryBtn?.addEventListener('click', () => location.reload());
 
     const archiveBtn = document.getElementById('live-empty-archive');
     archiveBtn?.addEventListener('click', () => {
@@ -761,53 +696,6 @@ function renderLiveEpisode() {
   // Render latest episode
   const latestEpisode = AppState.episodes[AppState.episodes.length - 1];
   renderEpisode(latestEpisode, container, false);
-  setLiveUpdatedTimestamp();
-  announceLiveEpisode(AppState.stats?.current_episode || AppState.episodes.length, latestEpisode.title || '');
-}
-
-async function refreshLiveData() {
-  const refreshBtn = document.getElementById('live-refresh-btn');
-  if (refreshBtn) {
-    refreshBtn.disabled = true;
-    refreshBtn.textContent = 'Laedt...';
-  }
-  setLiveUpdatedTimestamp('Aktualisiere...');
-
-  try {
-    // Force fresh reads by clearing in-memory and localStorage caches first.
-    EpisodeService.reload();
-    StatsService.reload();
-
-    const [episodes, stats] = await Promise.all([
-      EpisodeService.getAllEpisodes(),
-      StatsService.getStats()
-    ]);
-
-    AppState.episodes = episodes;
-    AppState.stats = stats;
-
-    renderDashboard();
-    renderLandingMeta();
-    initCountdown();
-    renderLiveEpisode();
-    renderFullTimeline();
-    renderArchive();
-    renderDossiers();
-  } catch (error) {
-    console.error('%c[UPLINK]%c Live refresh failed:', 'color:#ff4757;font-weight:bold', 'color:inherit', error);
-    setLiveUpdatedTimestamp('Update fehlgeschlagen');
-    const notice = document.getElementById('live-announce');
-    if (notice) {
-      notice.textContent = 'Live-Aktualisierung fehlgeschlagen. Bitte erneut versuchen.';
-      notice.hidden = false;
-      setTimeout(() => { notice.hidden = true; }, 5000);
-    }
-  } finally {
-    if (refreshBtn) {
-      refreshBtn.disabled = false;
-      refreshBtn.textContent = 'Aktualisieren';
-    }
-  }
 }
 
 /* ==========================================================
@@ -827,7 +715,7 @@ function renderFullTimeline() {
   if (AppState.episodes.length === 0) return;
   
   // Sort episodes based on current order
-  const sorted = EpisodeService.sortEpisodes(AppState.episodes, AppState.currentOrder);
+  const sorted = sortEpisodes(AppState.episodes, AppState.currentOrder);
   
   // Render all episodes
   sorted.forEach(episode => renderEpisode(episode, container));
@@ -1151,81 +1039,41 @@ function pageToHash(page) {
   return page;
 }
 
-function hashToPage(hash) {
-  if (hash === 'episoden') return 'protokoll';
-  return hash || 'live';
+function normalizePath(path) {
+  if (!path || path === '') return '/';
+  let normalized = path.startsWith('/') ? path : `/${path}`;
+  if (normalized.length > 1 && normalized.endsWith('/')) {
+    normalized = normalized.slice(0, -1);
+  }
+  return normalized;
 }
 
 function navigate(page, options = {}) {
   const { scrollToTop = true, updateHash = true } = options;
   const targetPage = VALID_PAGES.has(page) ? page : 'live';
 
-  // Deactivate all pages and tabs
-  $$('.page').forEach(p => {
-    p.classList.remove('active');
-    p.setAttribute('hidden', '');
-  });
-  $$('.nav-tab').forEach(t => {
-    t.classList.remove('active');
-    t.setAttribute('aria-selected', 'false');
-    t.setAttribute('tabindex', '-1');
-  });
-  
-  // Activate target page
-  const pageEl = $(`#page-${targetPage}`);
-  if (pageEl) {
-    pageEl.classList.add('active');
-    pageEl.removeAttribute('hidden');
-  }
-  
-  // Activate target tab
-  const tabEl = $(`.nav-tab[data-page="${targetPage}"]`);
-  if (tabEl) {
-    tabEl.classList.add('active');
-    tabEl.classList.remove('tab-flash');
-    requestAnimationFrame(() => tabEl.classList.add('tab-flash'));
-    setTimeout(() => tabEl.classList.remove('tab-flash'), 750);
-    tabEl.setAttribute('aria-selected', 'true');
-    tabEl.setAttribute('tabindex', '0');
-  }
-  
-  // Update hash and scroll to top
-  if (updateHash) {
-    window.location.hash = pageToHash(targetPage);
-  }
-  if (scrollToTop) {
-    window.scrollTo({ top: 0 });
-  }
-  
-  // Update state
-  AppState.currentPage = targetPage;
-  
-  // Emit navigation event
-  EventBus.emit('navigate', { page: targetPage });
-}
+  const targetUrl = PAGE_URLS[targetPage] || '/';
+  const currentUrl = normalizePath(window.location.pathname);
+  const normalizedTargetUrl = normalizePath(targetUrl);
 
-/**
- * Handle route from hash
- */
-function handleRoute() {
-  let hash = hashToPage(window.location.hash.replace('#', ''));
-  if (!VALID_PAGES.has(hash) && hash !== 'archiv') {
-    hash = 'live';
-  }
-  if (hash === 'archiv') {
-    navigate('protokoll', { updateHash: true });
-    setOrder('phase');
+  AppState.currentPage = targetPage;
+
+  if (normalizedTargetUrl === currentUrl) {
+    if (scrollToTop) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
     return;
   }
-  const epRaw = new URLSearchParams(window.location.search).get('ep');
-  const hasEpisodeQuery = !!(epRaw && /^\d+$/.test(epRaw));
-  if (AppState.currentPage === hash && !(hash === 'protokoll' && hasEpisodeQuery)) return;
-  navigate(hash, { updateHash: false });
-  if (hash === 'protokoll') {
-    scrollToEpisodeFromQuery();
-  }
-}
 
+  if (updateHash) {
+    const nextUrl = new URL(targetUrl, window.location.origin);
+    nextUrl.hash = pageToHash(targetPage);
+    window.location.href = nextUrl.toString();
+    return;
+  }
+
+  window.location.href = targetUrl;
+}
 
 /* ==========================================================
    DATA LOADING
@@ -1262,13 +1110,62 @@ async function hashSHA256(input) {
     .join('');
 }
 
+function hexToBytes(hex) {
+  if (typeof hex !== 'string' || !/^[0-9a-f]{64}$/i.test(hex)) return null;
+  const bytes = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < bytes.length; i += 1) {
+    bytes[i] = Number.parseInt(hex.slice(i * 2, i * 2 + 2), 16);
+  }
+  return bytes;
+}
+
+function base64ToBytes(base64) {
+  if (typeof base64 !== 'string' || !base64) return null;
+  try {
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i += 1) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes;
+  } catch {
+    return null;
+  }
+}
+
+function decryptProtectedContent(ciphertext, keyHex, expectedPage) {
+  const source = base64ToBytes(ciphertext);
+  const key = hexToBytes(keyHex);
+  if (!source || !key || key.length === 0) return null;
+
+  const decoded = new Uint8Array(source.length);
+  for (let i = 0; i < source.length; i += 1) {
+    decoded[i] = source[i] ^ key[i % key.length];
+  }
+
+  const text = new TextDecoder().decode(decoded);
+  const prefix = `UPLINK-PROTECTED::${expectedPage}::`;
+  if (!text.startsWith(prefix)) return null;
+  return text.slice(prefix.length);
+}
+
+function restoreProtectedContent(ciphertext, keyHex, expectedPage) {
+  const restoredHtml = decryptProtectedContent(ciphertext, keyHex, expectedPage);
+  if (!restoredHtml) return false;
+  const main = $('#main-content');
+  if (!main) return false;
+  main.innerHTML = restoredHtml;
+  return true;
+}
+
 /**
  * Show maintenance gate if enabled in config
  * @param {Object} config - App configuration
+ * @param {Function|null} onUnlock - Optional callback after successful unlock
  * @returns {Promise<boolean>} True if gate is active (app loading paused)
  */
-async function enforceMaintenanceGate(config) {
-  const settings = config?.maintenance;
+async function enforceMaintenanceGate(config, onUnlock = null) {
+  const settings = config?.maintenance || {};
   const params = new URLSearchParams(window.location.search);
   if (params.get('maintenance') === 'off') {
     sessionStorage.setItem('uplink_maintenance_force_off', '1');
@@ -1282,17 +1179,37 @@ async function enforceMaintenanceGate(config) {
   if (!enabled) return false;
 
   const expectedHash = (settings.passphrase_sha256 || '').trim().toLowerCase();
-  const sessionKey = `${MAINT_SESSION_PREFIX}${expectedHash || 'open'}`;
+  const protectedPayload = config?.protected_content || {};
+  const protectedCiphertext = typeof protectedPayload.ciphertext === 'string'
+    ? protectedPayload.ciphertext.trim()
+    : '';
+  const protectedPage = typeof protectedPayload.page === 'string'
+    ? protectedPayload.page
+    : CURRENT_STATIC_PAGE;
+  const hasProtectedContent = protectedCiphertext.length > 0 && protectedPage === CURRENT_STATIC_PAGE;
+
+  const tryRestoreWithKey = (keyHex) => {
+    if (!hasProtectedContent || typeof keyHex !== 'string' || !keyHex) return false;
+    return restoreProtectedContent(protectedCiphertext, keyHex, protectedPage);
+  };
+
+  const sessionToken = expectedHash || (hasProtectedContent ? protectedCiphertext.slice(0, 32) : 'open');
+  const sessionKey = `${MAINT_SESSION_PREFIX}${sessionToken}`;
   const stored = sessionStorage.getItem(sessionKey);
 
-  if (stored && stored === (expectedHash || 'open')) {
-    return false;
+  if (stored) {
+    if (tryRestoreWithKey(stored)) {
+      return false;
+    }
+    if (!hasProtectedContent && stored === (expectedHash || 'open')) {
+      return false;
+    }
   }
 
   hideLoading();
   document.body.classList.add('maintenance-active');
 
-  const requirePassword = !!expectedHash;
+  const requirePassword = !!expectedHash || hasProtectedContent;
   const overlay = document.createElement('div');
   overlay.className = 'maintenance-overlay';
 
@@ -1338,17 +1255,19 @@ async function enforceMaintenanceGate(config) {
     input?.focus();
   });
 
-  const unlock = async () => {
+  const unlock = async (sessionValue) => {
     releaseFocusTrap();
-    sessionStorage.setItem(sessionKey, expectedHash || 'open');
+    if (typeof sessionValue === 'string' && sessionValue) {
+      sessionStorage.setItem(sessionKey, sessionValue);
+    } else if (!requirePassword) {
+      sessionStorage.setItem(sessionKey, 'open');
+    }
     overlay.classList.add('closing');
     setTimeout(() => overlay.remove(), 200);
     document.body.classList.remove('maintenance-active');
-    showLoading();
-    try {
-      await loadAppDataAndRender();
-    } catch (error) {
-      handleLoadError(error);
+    hideLoading();
+    if (typeof onUnlock === 'function') {
+      await onUnlock();
     }
   };
 
@@ -1367,6 +1286,17 @@ async function enforceMaintenanceGate(config) {
           return;
         }
         const hashed = await hashSHA256(entered);
+        if (hasProtectedContent) {
+          if (!tryRestoreWithKey(hashed)) {
+            errorEl && (errorEl.textContent = 'Falsches Passwort.');
+            submitBtn.disabled = false;
+            input?.focus();
+            input?.select();
+            return;
+          }
+          await unlock(hashed);
+          return;
+        }
         if (hashed !== expectedHash) {
           errorEl && (errorEl.textContent = 'Falsches Passwort.');
           submitBtn.disabled = false;
@@ -1374,7 +1304,7 @@ async function enforceMaintenanceGate(config) {
           input?.select();
           return;
         }
-        await unlock();
+        await unlock(expectedHash);
       } catch (err) {
         console.error('Maintenance gate error', err);
         const msg = err.message === 'HTTPS_REQUIRED'
@@ -1386,89 +1316,12 @@ async function enforceMaintenanceGate(config) {
     });
   } else if (submitBtn) {
     submitBtn.addEventListener('click', async () => {
-      await unlock();
+      await unlock('open');
     });
   }
 
   input?.focus();
   return true;
-}
-
-async function loadAppDataAndRender() {
-  console.log('%c[UPLINK]%c Loading data...', 'color:#00ff41;font-weight:bold', 'color:inherit');
-
-  const [episodes, stats] = await Promise.all([
-    EpisodeService.getAllEpisodes(),
-    StatsService.getStats()
-  ]);
-
-  console.log('%c[UPLINK]%c Data loaded:', 'color:#00ff41;font-weight:bold', 'color:inherit', {
-    episodes: episodes.length,
-    stats,
-    config: AppState.config
-  });
-
-  AppState.episodes = episodes;
-  AppState.stats = stats;
-
-  console.log('%c[UPLINK]%c Rendering pages...', 'color:#00ff41;font-weight:bold', 'color:inherit');
-
-  renderDashboard();
-  renderLandingMeta();
-  initCountdown();
-  renderLiveEpisode();
-  renderFullTimeline();
-  renderArchive();
-  renderDossiers();
-  ensureFormFieldIdentifiers();
-
-  handleRoute();
-
-  hideLoading();
-
-  console.log('%c[UPLINK]%c System ready!', 'color:#00ff41;font-weight:bold', 'color:inherit');
-
-  EventBus.emit('app:ready');
-}
-
-function handleLoadError(error) {
-  console.error('%c[UPLINK]%c Failed to load data:', 'color:#ff4757;font-weight:bold', 'color:inherit', error);
-  hideLoading();
-
-  document.body.innerHTML = `
-<div class="load-error-shell">
-  <div class="load-error-card">
-    <div class="load-error-title">// CONNECTION FAILED</div>
-    <div class="load-error-copy">Die Daten konnten nicht geladen werden. Bitte Verbindung pr&uuml;fen und erneut versuchen.</div>
-    <pre class="load-error-details">// CODE: ${escapeHtml(error.message || 'UNKNOWN_ERROR')}
-// TIME: ${escapeHtml(new Date().toISOString())}
-// RETRY PROTOCOL: MANUAL</pre>
-    <button id="retry-btn" class="load-error-btn">
-      Erneut verbinden
-    </button>
-  </div>
-</div>`;
-
-  document.getElementById('retry-btn')?.addEventListener('click', () => location.reload());
-
-  EventBus.emit('app:error', { error });
-}
-async function loadAll() {
-  try {
-    showLoading();
-
-    console.log('%c[UPLINK]%c Loading config...', 'color:#00ff41;font-weight:bold', 'color:inherit');
-    const config = await StatsService.getConfig();
-    AppState.config = config;
-
-    const gateActive = await enforceMaintenanceGate(config);
-    if (gateActive) return;
-
-    await loadAppDataAndRender();
-
-  } catch (error) {
-    handleLoadError(error);
-  }
 }
 
 /**
@@ -1552,6 +1405,11 @@ function handleGlobalShortcuts(event) {
   if (key === 'd') {
     event.preventDefault();
     navigate('dossiers');
+    return;
+  }
+  if (key === 'i') {
+    event.preventDefault();
+    navigate('info');
   }
 }
 
@@ -1563,71 +1421,28 @@ function handleGlobalShortcuts(event) {
  * Initialize event listeners
  */
 function initEventListeners() {
-  // Navigation tabs
-  const navTabs = $('#nav-tabs');
-  if (navTabs) {
-    delegate(navTabs, '.nav-tab', 'click', function(e) {
-      const page = this.dataset.page;
-      if (page) {
-        navigate(page, { scrollToTop: false });
-        const anchorId = page === 'protokoll' ? 'episoden' : page;
-        const target = document.getElementById(anchorId) || document.getElementById(`page-${page}`);
-        if (target) {
-          setTimeout(() => target.scrollIntoView({ behavior: 'smooth', block: 'start' }), 10);
-        }
-      }
-    });
-
-    navTabs.addEventListener('keydown', (event) => {
-      const tabs = Array.from(navTabs.querySelectorAll('.nav-tab'));
-      if (tabs.length === 0) return;
-      const currentIndex = tabs.findIndex(tab => tab === document.activeElement);
-      if (currentIndex < 0) return;
-
-      let nextIndex = -1;
-      if (event.key === 'ArrowRight') nextIndex = (currentIndex + 1) % tabs.length;
-      if (event.key === 'ArrowLeft') nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
-      if (event.key === 'Home') nextIndex = 0;
-      if (event.key === 'End') nextIndex = tabs.length - 1;
-
-      if (nextIndex < 0) return;
-      event.preventDefault();
-      const nextTab = tabs[nextIndex];
-      if (!(nextTab instanceof HTMLButtonElement)) return;
-      nextTab.focus();
-      nextTab.click();
-    });
-  }
-
-  const ctaEp1 = $('#cta-ep1');
-  if (ctaEp1) {
-    ctaEp1.addEventListener('click', (e) => {
-      e.preventDefault();
-      navigate('protokoll');
-      setOrder('chrono');
-      setTimeout(() => {
-        const ep1 = document.getElementById('ep-1');
-        if (ep1) ep1.scrollIntoView({ behavior: 'smooth' });
-      }, 150);
-    });
-  }
-  
   // Timeline controls (Protokoll)
   const btnNewest = $('#btn-newest');
   const btnChrono = $('#btn-chrono');
   const btnOrigin = $('#btn-origin');
 
   if (btnNewest) {
-    btnNewest.addEventListener('click', () => setOrder('newest'));
+    btnNewest.addEventListener('click', () => {
+      setStaticEpisodeView('newest');
+    });
   }
 
   if (btnChrono) {
-    btnChrono.addEventListener('click', () => setOrder('chrono'));
+    btnChrono.addEventListener('click', () => {
+      setStaticEpisodeView('chrono');
+    });
   }
 
   const btnPhase = $('#btn-phase');
   if (btnPhase) {
-    btnPhase.addEventListener('click', () => setOrder('phase'));
+    btnPhase.addEventListener('click', () => {
+      setStaticEpisodeView('phase');
+    });
   }
 
   if (btnOrigin) {
@@ -1658,6 +1473,7 @@ function initEventListeners() {
   const ctaLatest = document.querySelector('.cta[href="#live"]');
   if (ctaLatest) {
     ctaLatest.addEventListener('click', (e) => {
+      if (CURRENT_STATIC_PAGE !== 'live') return;
       e.preventDefault();
       navigate('live', { scrollToTop: false });
       setTimeout(() => {
@@ -1667,75 +1483,12 @@ function initEventListeners() {
     });
   }
 
-  const liveRefreshBtn = $('#live-refresh-btn');
-  if (liveRefreshBtn) {
-    liveRefreshBtn.addEventListener('click', () => refreshLiveData());
-  }
-
-  // Header accordion: compact "Was ist UPLINK?" explainer
-  const ctaInfoToggle = $('#cta-info-toggle');
-  const headerInfoPanel = $('#header-info-panel');
-  const headerInfoLink = $('#header-info-link');
-
-  if (ctaInfoToggle && headerInfoPanel) {
-    const setInfoOpen = (open) => {
-      headerInfoPanel.hidden = !open;
-      ctaInfoToggle.setAttribute('aria-expanded', String(open));
-    };
-
-    ctaInfoToggle.addEventListener('click', () => {
-      setInfoOpen(headerInfoPanel.hidden);
-    });
-
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && !headerInfoPanel.hidden) {
-        setInfoOpen(false);
-        ctaInfoToggle.focus();
-      }
-    });
-
-    document.addEventListener('click', (e) => {
-      const target = e.target;
-      if (!(target instanceof Node)) return;
-      if (headerInfoPanel.hidden) return;
-      if (ctaInfoToggle.contains(target) || headerInfoPanel.contains(target)) return;
-      setInfoOpen(false);
-    });
-
-    if (headerInfoLink) {
-      headerInfoLink.addEventListener('click', () => {
-        setInfoOpen(false);
-        navigate('info', { scrollToTop: false });
-        setTimeout(() => {
-          const target = document.getElementById('info') || document.getElementById('page-info');
-          if (target) target.scrollIntoView({ behavior: 'smooth' });
-        }, 80);
-      });
-    }
-  }
-  
-  // Archive episode navigation (inside page-protokoll, switch to chrono view)
-  const archiveContent = $('#archive-content');
-  if (archiveContent) {
-    delegate(archiveContent, '.arc-episode', 'click', function() {
-      const epNum = this.dataset.epNum;
-      setOrder('chrono');
-      setTimeout(() => {
-        const el = document.getElementById(`ep-${epNum}`);
-        if (el) el.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
-    });
-  }
-
   const mainContent = $('#main-content');
   if (mainContent) {
     delegate(mainContent, '.episode-share-copy', 'click', function() {
       handleShareCopy(this);
     });
   }
-
-  // Hash change
-  window.addEventListener('hashchange', handleRoute);
   window.addEventListener('keydown', handleGlobalShortcuts);
 }
 
@@ -1747,24 +1500,35 @@ function initEventListeners() {
 /**
  * Initialize application
  */
-function init() {
+async function init() {
   console.log('%c[UPLINK]%c System initializing...', 'color:#00ff41;font-weight:bold', 'color:inherit');
 
+  AppState.currentPage = CURRENT_STATIC_PAGE;
   initColdOpen();
   initAnalystMode();
 
-  // Initialize event listeners
-  initEventListeners();
-  
-  // Load all data
-  loadAll();
+  const finishStaticInit = () => {
+    initStaticPageState();
+    if (CURRENT_STATIC_PAGE === 'protokoll') {
+      setStaticEpisodeView('newest');
+    }
+  };
+  const finalizePageSetup = () => {
+    initEventListeners();
+    finishStaticInit();
+  };
+
+  AppState.config = RUNTIME_CONFIG;
+  const gateActive = await enforceMaintenanceGate(RUNTIME_CONFIG, finalizePageSetup);
+  if (gateActive) return;
+  finalizePageSetup();
 }
 
 // Start app when DOM is ready
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', init);
 } else {
-  init();
+  void init();
 }
 
 /* ==========================================================
@@ -1782,4 +1546,3 @@ export {
   renderArchive,
   renderEpisode
 };
-

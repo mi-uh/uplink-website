@@ -47,4 +47,16 @@ jobs:
             printf '\n' >> "$BUNDLE"
           done
 
-          rsync -av --delete --exclude='data/dialogs.json' --exclude='data/stats.json' ./public/ /srv/docker/data/uplink/public/
+          test -f /srv/docker/data/uplink/data/config.json
+          test -f /srv/docker/data/uplink/data/dialogs.json
+          test -f /srv/docker/data/uplink/data/stats.json
+
+          python3 scripts/build_static_pages.py \
+            --config /srv/docker/data/uplink/data/config.json \
+            --dialogs /srv/docker/data/uplink/data/dialogs.json \
+            --stats /srv/docker/data/uplink/data/stats.json \
+            --output-dir public \
+            --base-url https://uplink.michaeluhrich.xyz
+
+          rsync -av --delete ./public/ /srv/docker/data/uplink/public/
+          rsync -av --delete --exclude='__pycache__' ./scripts/ /srv/docker/data/uplink/scripts/

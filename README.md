@@ -2,148 +2,102 @@
 
 https://uplink.michaeluhrich.xyz
 
-Static single-page web app for serialized AI-fiction episodes.
-Vanilla HTML/CSS/JS only. No framework, no TypeScript. CSS is bundled on deploy.
+UPLINK is a static, episodic story website about intercepted transmissions between two fictional AI agents (NEXUS and CIPHER).  
+It is built with vanilla HTML, CSS, and JavaScript, with page content generated from JSON source files.
 
-![Screenshot](./public/assets/screenshot.png)
+![Screenshot](./screenshot.png)
 
-## What It Does
+## What This Site Includes
 
-- Shows the latest episode in `Live`
-- Shows full episode history in `Episoden`
-- Shows character dossiers from config
-- Shows score/metric dashboard and story phase status
+- Live page with the latest transmission and status dashboard (`/`)
+- Episode overview (`/episoden.html`)
+- One static page per episode (`/episode-001.html`, `...`)
+- Character dossiers (`/dossiers.html`)
+- Project context/info page (`/info.html`)
 
-## Quick Start
+The site is SEO-friendly (pre-rendered HTML) and uses JavaScript only for progressive enhancement.
 
-Generate the CSS bundle first (only needed once locally, runs automatically on deploy):
+## How It Is Operated
+
+Navigation is tab-based at the top (`Live`, `Episoden`, `Dossiers`, `Info`).
+
+- `Live`: current state and latest episode content
+- `Episoden`: archive views (newest, chronological, phase-based)
+- `Dossiers`: actor profiles and relationship signals
+- `Info`: project explanation and legal links
+
+## Build Model (Required Workflow)
+
+Source of truth:
+
+- `data/config.json`
+- `data/dialogs.json`
+- `data/stats.json`
+- CSS modules in `public/css/`
+- JS modules in `public/js/`
+
+Generated output:
+
+- `public/index.html`
+- `public/episoden.html`
+- `public/episode-XXX.html`
+- `public/dossiers.html`
+- `public/info.html`
+- `public/sitemap.xml`
+- `public/css/bundle.css`
+
+Do not manually edit generated HTML files in `public/`.
+
+## Local Build & Preview
+
+1. Rebuild CSS bundle after CSS changes:
 
 ```bash
-cat public/css/00-reset.css \
-    public/css/01-layout.css \
-    public/css/02-typography.css \
-    public/css/03-components/site-chrome.css \
-    public/css/03-components/navigation.css \
-    public/css/03-components/cold-open.css \
-    public/css/03-components/landing.css \
-    public/css/03-components/dashboard.css \
-    public/css/03-components/timeline.css \
-    public/css/03-components/analyst.css \
-    public/css/03-components/archive.css \
-    public/css/03-components/dossiers.css \
-    public/css/03-components/info.css \
-    public/css/04-effects.css \
-    public/css/05-themes.css \
-    public/css/06-responsive.css \
-    > public/css/bundle.css
+BUNDLE=public/css/bundle.css
+: > "$BUNDLE"
+
+for f in \
+  public/css/00-reset.css \
+  public/css/01-layout.css \
+  public/css/02-typography.css \
+  public/css/03-components/site-chrome.css \
+  public/css/03-components/navigation.css \
+  public/css/03-components/cold-open.css \
+  public/css/03-components/landing.css \
+  public/css/03-components/dashboard.css \
+  public/css/03-components/timeline.css \
+  public/css/03-components/analyst.css \
+  public/css/03-components/archive.css \
+  public/css/03-components/dossiers.css \
+  public/css/03-components/info.css \
+  public/css/04-effects.css \
+  public/css/05-themes.css \
+  public/css/06-responsive.css
+do
+  test -f "$f"
+  sed '1s/^\xEF\xBB\xBF//' "$f" >> "$BUNDLE"
+  printf '\n' >> "$BUNDLE"
+done
 ```
 
-Then serve `public/` with any static server:
+2. Build static pages:
 
 ```bash
-npx serve public
-# or
-python -m http.server 8080 --directory public
+python3 scripts/build_static_pages.py
 ```
 
-Then open:
+3. Preview locally:
 
-- `http://localhost:8080/`
-
-## Project Structure
-
-```text
-public/
-|-- index.html
-|-- css/
-|-- js/
-|   |-- main.js
-|   |-- features/cold-open.js
-|   |-- core/
-|   |-- services/
-|   `-- utils/
-`-- data/
-    |-- config.json
-    |-- dialogs.json
-    `-- stats.json
+```bash
+python3 -m http.server 8000 --directory public
 ```
 
-## Data Files and Required Format
+Open: `http://localhost:8000/`
 
-The app reads content from:
+## Notes
 
-- `/data/config.json`
-- `/data/dialogs.json`
-- `/data/stats.json`
-
-### `dialogs.json` (episodes)
-
-Must be a JSON array. Each item is one episode.
-
-Minimum working shape:
-
-```json
-[
-  {
-    "date": "2026-03-01",
-    "title": "Episode Title",
-    "episode": 1,
-    "messages": [
-      { "type": "system", "text": "SECURE CHANNEL ESTABLISHED" },
-      { "author": "NEXUS", "text": "..." },
-      { "author": "CIPHER", "text": "..." }
-    ]
-  }
-]
-```
-
-Optional fields used by the UI:
-
-- `phase` (string): shown as episode meta chip
-- `terminal_blocks` (array): terminal output blocks
-- `score_delta` / `scoreDelta` (object): shown as episode meta chips
-- `metrics_update` / `metricsUpdate` (object): shown as episode meta chips
-- `state_snapshot` / `stateSnapshot` (object): used for relationship state
-- `analyst_notes` (array): rendered after messages
-
-`terminal_blocks` format:
-
-```json
-[
-  {
-    "after_message": 0,
-    "owner": "nexus",
-    "content": "$ nmap -sV ..."
-  }
-]
-```
-
-`after_message` is zero-based (0 = after first message).
-
-### `stats.json` (dashboard/meta state)
-
-Expected keys:
-
-- `last_updated` (date string)
-- `current_episode` (number)
-- `current_day` (number)
-- `total_days` (number)
-- `phase` (must match a `story_arc.phases[].id` from `config.json`)
-- `scores` (object with one key per scoring category)
-- `metrics` (object with metric values)
-- `score_history` (array; values should be cumulative per episode)
-
-Optional:
-
-- `next_episode_date` (ISO datetime) to enable countdown
-
-## Operational Notes
-
-- In this repository, `dialogs.json` and `stats.json` can be kept as placeholders/dummy files.
-- Production data updates can run outside this repo as long as the web server serves valid JSON at `/data/dialogs.json` and `/data/stats.json`.
-- Data is cached in memory and localStorage by `DataService` (5 min for dialogs/stats).
-- Use the `Aktualisieren` button in Live view to force-refresh data.
-- If needed, clear cache keys starting with `uplink_cache_` in browser localStorage.
+- Default builder inputs are `data/*.json`.
+- If maintenance mode is enabled in `config.json`, episode pages are not generated and content is withheld from static HTML.
 
 ## License
 
