@@ -22,7 +22,6 @@ const AppState = {
 };
 
 const ANALYST_KEY = 'uplink_analyst_id';
-const MAINT_SESSION_PREFIX = 'uplink_maintenance_';
 const VALID_PAGES = new Set(['live', 'protokoll', 'dossiers', 'info']);
 const PAGE_URLS = {
   live: '/',
@@ -31,7 +30,22 @@ const PAGE_URLS = {
   info: '/info.html'
 };
 const CURRENT_STATIC_PAGE = document.body?.dataset?.page || 'live';
-const RUNTIME_CONFIG = window.__UPLINK_RUNTIME__ || {};
+
+function readRuntimeConfig() {
+  const meta = document.querySelector('meta[name="uplink-runtime"]');
+  if (!meta) return {};
+  const raw = meta.getAttribute('content') || '';
+  if (!raw) return {};
+  try {
+    return JSON.parse(raw);
+  } catch (error) {
+    console.error('Failed to parse runtime config', error);
+    return {};
+  }
+}
+
+const RUNTIME_CONFIG = readRuntimeConfig();
+window.__UPLINK_RUNTIME__ = RUNTIME_CONFIG;
 
 function initStaticPageState() {
   AppState.currentPage = CURRENT_STATIC_PAGE;
@@ -261,7 +275,7 @@ function renderSparkline(history, categories) {
   // Generate legend
   const legendItems = categories.map(c => {
     const safeId = toSafeClassName(c?.id, 'default');
-    return `<span class="dash-legend-item legend-${safeId}">&bull; ${c.label}</span>`;
+    return `<span class="dash-legend-item legend-${safeId}">&bull; ${escapeHtml(c?.label || '')}</span>`;
   }).join('');
   
   return `<div class="dash-sparkline">
@@ -430,9 +444,11 @@ async function renderDashboard() {
     const cls = val > 60 ? 'danger' : val > 35 ? 'warn' : 'nexus';
     const widthCls = toPercentClass(pct);
     const sign = delta > 0 ? '+' : '';
+    const icon = escapeHtml(cat?.icon || '');
+    const label = escapeHtml(cat?.label || '');
     
     return `<div class="dash-bar-row">
-      <span class="dash-bar-label">${cat.icon} ${cat.label}</span>
+      <span class="dash-bar-label">${icon} ${label}</span>
       <div class="dash-bar-track"><div class="dash-bar-fill ${cls} ${widthCls}"></div></div>
       <span class="dash-bar-value">${pct}%</span>
       <span class="dash-bar-delta">${sign}${delta}</span>
@@ -466,10 +482,12 @@ async function renderDashboard() {
     const value = m[def.id];
     const displayValue = def.unit ? `${value}${def.unit}` : value;
     const cssClass = getMetricCssClass(def.id, value);
+    const label = escapeHtml(def?.label || '');
+    const safeDisplay = escapeHtml(displayValue);
 
     return `<div class="dash-priority-item">
-      <span class="dash-priority-label">${def.label}</span>
-      <span class="dash-priority-value ${cssClass}">${displayValue}</span>
+      <span class="dash-priority-label">${label}</span>
+      <span class="dash-priority-value ${cssClass}">${safeDisplay}</span>
     </div>`;
   }).join('');
 
@@ -477,10 +495,12 @@ async function renderDashboard() {
     const value = m[def.id];
     const displayValue = def.unit ? `${value}${def.unit}` : value;
     const cssClass = getMetricCssClass(def.id, value);
+    const label = escapeHtml(def?.label || '');
+    const safeDisplay = escapeHtml(displayValue);
 
     return `<div class="dash-metric">
-      <span class="dash-metric-value ${cssClass}">${displayValue}</span>
-      <span class="dash-metric-label">${def.label}</span>
+      <span class="dash-metric-value ${cssClass}">${safeDisplay}</span>
+      <span class="dash-metric-label">${label}</span>
     </div>`;
   }).join('');
   
@@ -501,13 +521,15 @@ async function renderDashboard() {
   detailSections.push(`<div class="dash-bars">${barsHtml}</div>`);
   if (metricsHtml) detailSections.push(`<div class="dash-metrics">${metricsHtml}</div>`);
   if (sparklineHtml) detailSections.push(sparklineHtml);
-  detailSections.push(`<div class="dash-arc">${arcHtml}<span class="dash-arc-label">${phase ? phase.label : ''}</span></div>`);
+  detailSections.push(`<div class="dash-arc">${arcHtml}<span class="dash-arc-label">${escapeHtml(phase ? phase.label : '')}</span></div>`);
   
   // Build complete dashboard
+  const season = escapeHtml(AppState.config?.project?.season ?? '?');
+  const phaseLabel = escapeHtml(phase ? phase.label : '???');
   el.innerHTML = `<div class="dash-box">
     <div class="dash-header">
       <span class="dash-header-title">Weltherrschafts-Index</span>
-      <span class="dash-header-meta">Tag ${s.current_day}/${s.total_days} &middot; ${phase ? phase.label : '???'} &middot; Staffel ${AppState.config.project.season}</span>
+      <span class="dash-header-meta">Tag ${s.current_day}/${s.total_days} &middot; ${phaseLabel} &middot; Staffel ${season}</span>
     </div>
     <div class="dash-priority">${priorityHtml}</div>
     <details class="dash-details">
@@ -863,8 +885,8 @@ function renderArchive() {
     phaseEl.innerHTML = `
       <div class="arc-phase-header">
         <div>
-          <div class="arc-phase-title">${phase.label}</div>
-          <div class="arc-phase-meta">Tag ${phase.days[0]}-${phase.days[1]}</div>
+          <div class="arc-phase-title">${escapeHtml(phase.label)}</div>
+          <div class="arc-phase-meta">Tag ${escapeHtml(phase.days?.[0] ?? '--')}-${escapeHtml(phase.days?.[1] ?? '--')}</div>
         </div>
         <span class="arc-phase-tag ${tagCls}">${tagText}</span>
       </div>
@@ -1048,6 +1070,38 @@ function pageToHash(page) {
   return page;
 }
 
+function scrollToHashTarget(hash, behavior = 'smooth') {
+  const cleanHash = String(hash || '').replace(/^#/, '');
+  if (!cleanHash) return false;
+  const target = document.getElementById(cleanHash);
+  if (!target) return false;
+  target.scrollIntoView({ behavior, block: 'start' });
+  return true;
+}
+
+function bindSmoothAnchorLink(link) {
+  if (!(link instanceof HTMLAnchorElement)) return;
+  link.addEventListener('click', (event) => {
+    const href = link.getAttribute('href') || '';
+    if (!href || href.startsWith('http://') || href.startsWith('https://')) return;
+
+    let targetUrl;
+    try {
+      targetUrl = new URL(href, window.location.origin);
+    } catch {
+      return;
+    }
+
+    const samePath = normalizePath(targetUrl.pathname) === normalizePath(window.location.pathname);
+    const hash = targetUrl.hash || '';
+    if (!samePath || !hash) return;
+
+    if (!scrollToHashTarget(hash)) return;
+    event.preventDefault();
+    window.history.replaceState(null, '', `${normalizePath(targetUrl.pathname)}${targetUrl.search}${hash}`);
+  });
+}
+
 function normalizePath(path) {
   if (!path || path === '') return '/';
   let normalized = path.startsWith('/') ? path : `/${path}`;
@@ -1058,25 +1112,33 @@ function normalizePath(path) {
 }
 
 function navigate(page, options = {}) {
-  const { scrollToTop = true, updateHash = true } = options;
+  const { scrollToTop = true, updateHash = true, targetHash = null } = options;
   const targetPage = VALID_PAGES.has(page) ? page : 'live';
 
   const targetUrl = PAGE_URLS[targetPage] || '/';
   const currentUrl = normalizePath(window.location.pathname);
   const normalizedTargetUrl = normalizePath(targetUrl);
+  const hash = String(targetHash || pageToHash(targetPage) || '').replace(/^#/, '');
 
   AppState.currentPage = targetPage;
 
   if (normalizedTargetUrl === currentUrl) {
     if (scrollToTop) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (!scrollToHashTarget(hash)) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+    if (updateHash && hash) {
+      window.history.replaceState(null, '', `${currentUrl}${window.location.search}#${hash}`);
     }
     return;
   }
 
   if (updateHash) {
     const nextUrl = new URL(targetUrl, window.location.origin);
-    nextUrl.hash = pageToHash(targetPage);
+    if (hash) {
+      nextUrl.hash = hash;
+    }
     window.location.href = nextUrl.toString();
     return;
   }
@@ -1106,68 +1168,6 @@ function assignIdAndName(el) {
 }
 
 /**
- * Hash helper for maintenance passphrase (SHA-256)
- */
-async function hashSHA256(input) {
-  if (!crypto?.subtle) {
-    throw new Error('HTTPS_REQUIRED');
-  }
-  const enc = new TextEncoder().encode(input);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', enc);
-  return Array.from(new Uint8Array(hashBuffer))
-    .map(b => b.toString(16).padStart(2, '0'))
-    .join('');
-}
-
-function hexToBytes(hex) {
-  if (typeof hex !== 'string' || !/^[0-9a-f]{64}$/i.test(hex)) return null;
-  const bytes = new Uint8Array(hex.length / 2);
-  for (let i = 0; i < bytes.length; i += 1) {
-    bytes[i] = Number.parseInt(hex.slice(i * 2, i * 2 + 2), 16);
-  }
-  return bytes;
-}
-
-function base64ToBytes(base64) {
-  if (typeof base64 !== 'string' || !base64) return null;
-  try {
-    const binary = atob(base64);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i += 1) {
-      bytes[i] = binary.charCodeAt(i);
-    }
-    return bytes;
-  } catch {
-    return null;
-  }
-}
-
-function decryptProtectedContent(ciphertext, keyHex, expectedPage) {
-  const source = base64ToBytes(ciphertext);
-  const key = hexToBytes(keyHex);
-  if (!source || !key || key.length === 0) return null;
-
-  const decoded = new Uint8Array(source.length);
-  for (let i = 0; i < source.length; i += 1) {
-    decoded[i] = source[i] ^ key[i % key.length];
-  }
-
-  const text = new TextDecoder().decode(decoded);
-  const prefix = `UPLINK-PROTECTED::${expectedPage}::`;
-  if (!text.startsWith(prefix)) return null;
-  return text.slice(prefix.length);
-}
-
-function restoreProtectedContent(ciphertext, keyHex, expectedPage) {
-  const restoredHtml = decryptProtectedContent(ciphertext, keyHex, expectedPage);
-  if (!restoredHtml) return false;
-  const main = $('#main-content');
-  if (!main) return false;
-  main.innerHTML = restoredHtml;
-  return true;
-}
-
-/**
  * Show maintenance gate if enabled in config
  * @param {Object} config - App configuration
  * @param {Function|null} onUnlock - Optional callback after successful unlock
@@ -1175,162 +1175,14 @@ function restoreProtectedContent(ciphertext, keyHex, expectedPage) {
  */
 async function enforceMaintenanceGate(config, onUnlock = null) {
   const settings = config?.maintenance || {};
-  const params = new URLSearchParams(window.location.search);
-  if (params.get('maintenance') === 'off') {
-    sessionStorage.setItem('uplink_maintenance_force_off', '1');
-  }
-  if (sessionStorage.getItem('uplink_maintenance_force_off') === '1') {
-    return false;
-  }
-
   const enabledRaw = settings?.enabled;
   const enabled = enabledRaw === true || enabledRaw === 'true' || enabledRaw === 1 || enabledRaw === '1';
   if (!enabled) return false;
-
-  const expectedHash = (settings.passphrase_sha256 || '').trim().toLowerCase();
-  const protectedPayload = config?.protected_content || {};
-  const protectedCiphertext = typeof protectedPayload.ciphertext === 'string'
-    ? protectedPayload.ciphertext.trim()
-    : '';
-  const protectedPage = typeof protectedPayload.page === 'string'
-    ? protectedPayload.page
-    : CURRENT_STATIC_PAGE;
-  const hasProtectedContent = protectedCiphertext.length > 0 && protectedPage === CURRENT_STATIC_PAGE;
-
-  const tryRestoreWithKey = (keyHex) => {
-    if (!hasProtectedContent || typeof keyHex !== 'string' || !keyHex) return false;
-    return restoreProtectedContent(protectedCiphertext, keyHex, protectedPage);
-  };
-
-  const sessionToken = expectedHash || (hasProtectedContent ? protectedCiphertext.slice(0, 32) : 'open');
-  const sessionKey = `${MAINT_SESSION_PREFIX}${sessionToken}`;
-  const stored = sessionStorage.getItem(sessionKey);
-
-  if (stored) {
-    if (tryRestoreWithKey(stored)) {
-      return false;
-    }
-    if (!hasProtectedContent && stored === (expectedHash || 'open')) {
-      return false;
-    }
+  if (typeof onUnlock === 'function') {
+    await onUnlock();
+    return true;
   }
-
-  hideLoading();
-  document.body.classList.add('maintenance-active');
-
-  const requirePassword = !!expectedHash || hasProtectedContent;
-  const overlay = document.createElement('div');
-  overlay.className = 'maintenance-overlay';
-
-  const message = settings.message || 'Wartungsmodus aktiv. Bitte sp\u00e4ter erneut versuchen.';
-  const hint = settings.passphrase_hint ? `<p class=\"maintenance-hint\">${escapeHtml(settings.passphrase_hint)}</p>` : '';
-
-  overlay.innerHTML = `
-    <div class="maintenance-panel" role="dialog" aria-modal="true" aria-labelledby="maintenance-title" aria-describedby="maintenance-copy">
-      <div class="maintenance-badge">WARTUNG</div>
-      <h2 id="maintenance-title">Wartungsmodus aktiv</h2>
-      <p id="maintenance-copy">${escapeHtml(message)}</p>
-      ${requirePassword ? `
-        <form id="maintenance-form" class="maintenance-form">
-          <label for="maintenance-pass">Zugangscode</label>
-          <div class="maintenance-input-row">
-            <input id="maintenance-pass" name="maintenance-pass" type="password" autocomplete="off" inputmode="text" required aria-required="true" />
-            <button type="submit" id="maintenance-submit" class="maintenance-btn">Freischalten</button>
-          </div>
-          ${hint}
-          <p class="maintenance-note">Nur temporaerer Zugang fuer Betreiber. Oeffentliche Auslieferung pausiert.</p>
-          <div class="maintenance-error" role="alert" aria-live="assertive"></div>
-        </form>
-      ` : `
-        <div class="maintenance-form">
-          ${hint || '<p class="maintenance-note">Kein Zugangscode gesetzt.</p>'}
-          <button id="maintenance-submit" class="maintenance-btn">Weiter</button>
-        </div>
-      `}
-    </div>
-  `;
-
-  document.body.appendChild(overlay);
-
-  const form = overlay.querySelector('#maintenance-form');
-  const submitBtn = overlay.querySelector('#maintenance-submit');
-  const input = overlay.querySelector('#maintenance-pass');
-  const errorEl = overlay.querySelector('.maintenance-error');
-  const releaseFocusTrap = trapFocusIn(overlay, () => {
-    if (!requirePassword) {
-      void unlock();
-      return;
-    }
-    input?.focus();
-  });
-
-  const unlock = async (sessionValue) => {
-    releaseFocusTrap();
-    if (typeof sessionValue === 'string' && sessionValue) {
-      sessionStorage.setItem(sessionKey, sessionValue);
-    } else if (!requirePassword) {
-      sessionStorage.setItem(sessionKey, 'open');
-    }
-    overlay.classList.add('closing');
-    setTimeout(() => overlay.remove(), 200);
-    document.body.classList.remove('maintenance-active');
-    hideLoading();
-    if (typeof onUnlock === 'function') {
-      await onUnlock();
-    }
-  };
-
-  if (requirePassword && form) {
-    form.addEventListener('submit', async (event) => {
-      event.preventDefault();
-      if (!submitBtn) return;
-      submitBtn.disabled = true;
-      errorEl && (errorEl.textContent = '');
-      try {
-        const entered = input?.value?.trim() || '';
-        if (!entered) {
-          errorEl && (errorEl.textContent = 'Passwort fehlt.');
-          submitBtn.disabled = false;
-          input?.focus();
-          return;
-        }
-        const hashed = await hashSHA256(entered);
-        if (hasProtectedContent) {
-          if (!tryRestoreWithKey(hashed)) {
-            errorEl && (errorEl.textContent = 'Falsches Passwort.');
-            submitBtn.disabled = false;
-            input?.focus();
-            input?.select();
-            return;
-          }
-          await unlock(hashed);
-          return;
-        }
-        if (hashed !== expectedHash) {
-          errorEl && (errorEl.textContent = 'Falsches Passwort.');
-          submitBtn.disabled = false;
-          input?.focus();
-          input?.select();
-          return;
-        }
-        await unlock(expectedHash);
-      } catch (err) {
-        console.error('Maintenance gate error', err);
-        const msg = err.message === 'HTTPS_REQUIRED'
-          ? 'Nur ueber HTTPS verfuegbar.'
-          : 'Unerwarteter Fehler. Bitte erneut versuchen.';
-        errorEl && (errorEl.textContent = msg);
-        submitBtn.disabled = false;
-      }
-    });
-  } else if (submitBtn) {
-    submitBtn.addEventListener('click', async () => {
-      await unlock('open');
-    });
-  }
-
-  input?.focus();
-  return true;
+  return false;
 }
 
 /**
@@ -1458,15 +1310,16 @@ function initEventListeners() {
     btnOrigin.addEventListener('click', () => scrollToOrigin());
   }
 
-  // Site title: back to top + Live
+  // Site title: jump to Live anchor
   const titleLink = document.querySelector('.site-title a');
   if (titleLink) {
     titleLink.addEventListener('click', (e) => {
       e.preventDefault();
-      navigate('live');
-      scrollToTopSmooth();
+      navigate('live', { targetHash: 'live' });
     });
   }
+
+  document.querySelectorAll('#nav-tabs a, .site-ctas a').forEach(bindSmoothAnchorLink);
 
   const topLiveBtn = $('#btn-top-live');
   if (topLiveBtn) {
@@ -1476,20 +1329,6 @@ function initEventListeners() {
   const topProtokollBtn = $('#btn-top-protokoll');
   if (topProtokollBtn) {
     topProtokollBtn.addEventListener('click', () => scrollToTopSmooth());
-  }
-
-  // CTA: Zur neuesten Episode (scroll past dashboard to first episode)
-  const ctaLatest = document.querySelector('.cta[href="#live"]');
-  if (ctaLatest) {
-    ctaLatest.addEventListener('click', (e) => {
-      if (CURRENT_STATIC_PAGE !== 'live') return;
-      e.preventDefault();
-      navigate('live', { scrollToTop: false });
-      setTimeout(() => {
-        const firstDay = document.querySelector('#timeline-live .day') || document.getElementById('timeline-live');
-        if (firstDay) firstDay.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 50);
-    });
   }
 
   const mainContent = $('#main-content');

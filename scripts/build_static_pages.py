@@ -4,10 +4,8 @@
 from __future__ import annotations
 
 import argparse
-import base64
 import html
 import json
-import os
 import re
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -67,11 +65,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--stats", default=str(DEFAULT_STATS_PATH))
     parser.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_DIR))
     parser.add_argument("--base-url", default=DEFAULT_BASE_URL)
-    parser.add_argument(
-        "--maintenance-hash",
-        default=os.getenv("UPLINK_MAINTENANCE_SHA256", ""),
-        help="Optional SHA-256 hex hash for maintenance unlock (overrides config).",
-    )
     return parser.parse_args()
 
 
@@ -233,41 +226,8 @@ def parse_bool_like(value: Any) -> bool:
     return False
 
 
-def parse_sha256_hex(value: Any) -> bytes | None:
-    candidate = str(value or "").strip().lower()
-    if not re.fullmatch(r"[0-9a-f]{64}", candidate):
-        return None
-    try:
-        return bytes.fromhex(candidate)
-    except ValueError:
-        return None
-
-
-def normalize_sha256_hex(value: Any) -> str:
-    candidate = str(value or "").strip().lower()
-    if re.fullmatch(r"[0-9a-f]{64}", candidate):
-        return candidate
-    return ""
-
-
-def apply_maintenance_hash_override(config: dict[str, Any], override_hash: Any) -> None:
-    maintenance = config.setdefault("maintenance", {})
-    normalized_override = normalize_sha256_hex(override_hash)
-    if normalized_override:
-        maintenance["passphrase_sha256"] = normalized_override
-        return
-    # Default-safe for versioned config: never leak hash from repository content.
-    maintenance["passphrase_sha256"] = ""
-
-
-def xor_encrypt_to_base64(plaintext: str, key_bytes: bytes) -> str:
-    if not key_bytes:
-        return ""
-    source = plaintext.encode("utf-8")
-    encrypted = bytes(
-        byte ^ key_bytes[index % len(key_bytes)] for index, byte in enumerate(source)
-    )
-    return base64.b64encode(encrypted).decode("ascii")
+def script_safe_json(value: Any) -> str:
+    return json.dumps(value, ensure_ascii=False).replace("</", "<\\/")
 
 
 def is_maintenance_enabled(config: dict[str, Any]) -> bool:
@@ -298,23 +258,6 @@ def build_maintenance_main(config: dict[str, Any]) -> str:
         "</div>"
         "</section>"
     )
-
-
-def build_protected_content_payload(
-    page: str,
-    main_content: str,
-    config: dict[str, Any],
-) -> dict[str, str] | None:
-    maintenance = config.get("maintenance") or {}
-    key_bytes = parse_sha256_hex(maintenance.get("passphrase_sha256"))
-    if not key_bytes:
-        return None
-    wrapped_content = f"UPLINK-PROTECTED::{page}::{main_content}"
-    return {
-        "format": "xor-v1",
-        "page": page,
-        "ciphertext": xor_encrypt_to_base64(wrapped_content, key_bytes),
-    }
 
 
 def normalize_episode(episode: dict[str, Any], index: int) -> dict[str, Any]:
@@ -806,6 +749,7 @@ def render_episode(
     base_url: str,
     include_id: bool = True,
     include_state_cards: bool = False,
+    id_override: str | None = None,
 ) -> str:
     ep_num = int(episode.get("episode") or 0)
     ep_str = pad_number(ep_num)
@@ -899,7 +843,10 @@ def render_episode(
             + render_threads_card((episode.get("state_snapshot") or {}).get("story_threads"))
         )
 
-    day_id = f' id="ep-{ep_num}"' if include_id else ""
+    if id_override:
+        day_id = f' id="{escape(id_override)}"'
+    else:
+        day_id = f' id="ep-{ep_num}"' if include_id else ""
     return (
         f'<div class="day"{day_id}>'
         '<div class="day-header">'
@@ -1014,9 +961,9 @@ def render_site_header(
         0 if maintenance_enabled else int(stats.get("current_episode") or (latest_episode or {}).get("episode") or 0)
     )
     episode_title = "" if maintenance_enabled else (latest_episode.get("title") if latest_episode else "")
-    info_link = "/info.html"
-    latest_link = ("/#live" if page != "live" else "#live") if not maintenance_enabled else info_link
-    ep1_link = "/episode-001.html" if not maintenance_enabled else "/episoden.html"
+    info_link = "/info.html#info" if page != "info" else "#info"
+    latest_link = ("/#latest-episode" if page != "live" else "#latest-episode") if not maintenance_enabled else info_link
+    ep1_link = "/episode-001.html#episoden" if not maintenance_enabled else "/episoden.html#episoden"
     primary_cta_label = "Zur neuesten Episode" if not maintenance_enabled else "Wartungsstatus"
     ep1_cta_label = "Von Anfang an: EP.001 &rarr;" if not maintenance_enabled else "Episoden (pausiert)"
     site_lead = (
@@ -1024,7 +971,6 @@ def render_site_header(
         if not maintenance_enabled
         else "Wartungsfenster aktiv. Inhalte sind voruebergehend pausiert."
     )
-    channel_label = "BETA" if not maintenance_enabled else "WARTUNG"
     phase_label = escape(phase.get("label", "--") if phase and not maintenance_enabled else "--")
     day_label = (
         f'{escape(stats.get("current_day", "--"))} / {escape(stats.get("total_days", "--"))}'
@@ -1035,7 +981,7 @@ def render_site_header(
         '<header class="site-header" id="site-header">'
         '<div class="site-topbar">'
         '<a class="site-back" href="https://michaeluhrich.xyz" rel="noopener">&larr; michaeluhrich.xyz</a>'
-        '<span class="site-classification">&gt; INTERCEPTED TRANSMISSION // CLASSIFICATION: BETA</span>'
+        '<span class="site-classification">&gt; INTERCEPTED TRANSMISSION</span>'
         "</div>"
         '<div class="site-identity"><h1 class="site-title"><a href="/">UPLINK</a></h1></div>'
         '<div class="site-briefing"><div class="site-briefing-copy">'
@@ -1049,8 +995,6 @@ def render_site_header(
         '<span class="status-dot nexus pulse" aria-hidden="true"></span>'
         f'<span class="status-label">Staffel {escape(config.get("project", {}).get("season", "?"))}</span>'
         '<span class="status-sep" aria-hidden="true"></span>'
-        f'<span class="meta-group"><span class="meta-key">Kanal</span><span class="meta-value">{channel_label}</span></span>'
-        '<span class="status-sep" aria-hidden="true"></span>'
         '<span class="meta-group"><span class="meta-key">Episode</span>'
         f'<span class="meta-value episode-val" id="meta-episode">EP.{pad_number(current_episode)} - {escape(episode_title or "")}</span></span>'
         '<span class="status-sep" aria-hidden="true"></span>'
@@ -1061,10 +1005,10 @@ def render_site_header(
         f'<span class="meta-value" id="meta-day">{day_label}</span></span>'
         "</div></div></header>"
         '<nav class="nav-tabs" id="nav-tabs" aria-label="Hauptnavigation">'
-        f'{nav_link("Live", "/", page == "live")}'
-        f'{nav_link("Episoden", "/episoden.html", page == "protokoll")}'
-        f'{nav_link("Dossiers", "/dossiers.html", page == "dossiers")}'
-        f'{nav_link("Info", "/info.html", page == "info")}'
+        f'{nav_link("Live", "#live" if page == "live" else "/#live", page == "live")}'
+        f'{nav_link("Episoden", "#episoden" if page == "protokoll" else "/episoden.html#episoden", page == "protokoll")}'
+        f'{nav_link("Dossiers", "#dossiers" if page == "dossiers" else "/dossiers.html#dossiers", page == "dossiers")}'
+        f'{nav_link("Info", "#info" if page == "info" else "/info.html#info", page == "info")}'
         "</nav>"
     )
 
@@ -1095,7 +1039,7 @@ def build_structured_data(
 
     scripts = [
         '<script type="application/ld+json">'
-        f"{json.dumps(website, ensure_ascii=False)}"
+        f"{script_safe_json(website)}"
         "</script>"
     ]
 
@@ -1113,7 +1057,7 @@ def build_structured_data(
         }
         scripts.append(
             '<script type="application/ld+json">'
-            f"{json.dumps(creative_work, ensure_ascii=False)}"
+            f"{script_safe_json(creative_work)}"
             "</script>"
         )
     else:
@@ -1131,7 +1075,7 @@ def build_structured_data(
         }
         scripts.append(
             '<script type="application/ld+json">'
-            f"{json.dumps(creative_work, ensure_ascii=False)}"
+            f"{script_safe_json(creative_work)}"
             "</script>"
         )
     return "\n".join(scripts)
@@ -1155,11 +1099,6 @@ def build_page(
     robots_directive = "noindex, nofollow" if maintenance_enabled else "index, follow"
     rendered_main_content = build_maintenance_main(config) if maintenance_enabled else main_content
     header_latest_episode = None if maintenance_enabled else latest_episode
-    protected_content = (
-        build_protected_content_payload(page, main_content, config)
-        if maintenance_enabled
-        else None
-    )
     og_image = f"{base_url.rstrip('/')}/assets/meta/og-image.png"
     twitter_image = f"{base_url.rstrip('/')}/assets/meta/twitter-image.png"
     maintenance_payload = dict(config.get("maintenance") or {})
@@ -1168,9 +1107,7 @@ def build_page(
         "analytics": config.get("analytics", {}),
         "maintenance": maintenance_payload,
     }
-    if protected_content:
-        runtime_payload["protected_content"] = protected_content
-    runtime_json = json.dumps(runtime_payload, ensure_ascii=False).replace("</", "<\\/")
+    runtime_json = json.dumps(runtime_payload, ensure_ascii=False)
     structured_data = (
         ""
         if maintenance_enabled
@@ -1210,6 +1147,7 @@ def build_page(
   <link rel="apple-touch-icon" href="/assets/meta/apple-touch-icon.svg">
   <link rel="alternate" hreflang="de" href="{escape(canonical_url)}">
   <link rel="alternate" hreflang="x-default" href="{escape(base_url.rstrip('/') + '/')}">
+  <meta name="uplink-runtime" content="{escape(runtime_json)}">
   <link rel="stylesheet" href="/css/bundle.css">
   {structured_data}
 </head>
@@ -1245,9 +1183,6 @@ def build_page(
       </div>
     </div>
   </div>
-  <script>
-    window.__UPLINK_RUNTIME__ = {runtime_json};
-  </script>
   <script src="/js/vendor/matomo.js"></script>
   <script type="module" src="/js/main.js?v={APP_VERSION}"></script>
 </body>
@@ -1260,10 +1195,17 @@ def build_live_main(
 ) -> str:
     latest_episode = episodes[-1] if episodes else None
     timeline_html = (
-        render_episode(latest_episode, config, base_url, include_id=False, include_state_cards=False)
+        render_episode(
+            latest_episode,
+            config,
+            base_url,
+            include_id=False,
+            include_state_cards=False,
+            id_override="latest-episode",
+        )
         if latest_episode
         else (
-            '<div class="live-empty"><div class="live-empty-title">// Keine Live-Protokolle verfuegbar</div>'
+            '<div id="latest-episode" class="live-empty"><div class="live-empty-title">// Keine Live-Protokolle verfuegbar</div>'
             '<p class="live-empty-text">Aktuell liegt noch keine Episode fuer die Live-Ansicht vor.</p></div>'
         )
     )
@@ -1346,6 +1288,7 @@ def build_episode_page_main(
     )
     return (
         '<section class="page active page-episode" id="page-episode">'
+        '<span id="episoden" class="page-anchor" aria-hidden="true"></span>'
         '<header class="page-header"><div><span class="page-eyebrow">Episode</span>'
         f'<h2>EP.{pad_number(ep_num)} &mdash; {escape(episode.get("title", ""))}</h2>'
         f'<p>Ver&ouml;ffentlicht am {format_date(episode.get("date"))}.</p>'
@@ -1362,6 +1305,7 @@ def build_dossiers_main(
 ) -> str:
     return (
         '<section class="page active" id="page-dossiers">'
+        '<span id="dossiers" class="page-anchor" aria-hidden="true"></span>'
         '<header class="page-header"><div><span class="page-eyebrow">Dossiers</span>'
         '<h2>Akteure &amp; Assets</h2><p>Profile, Rollen und Risikoeinstufungen der Protagonisten.</p>'
         '</div></header>'
@@ -1516,7 +1460,6 @@ def main() -> None:
     base_url = args.base_url.rstrip("/")
 
     config = load_json(config_path)
-    apply_maintenance_hash_override(config, args.maintenance_hash)
     episodes = normalize_episodes(load_json(dialogs_path))
     stats = load_json(stats_path)
     maintenance_enabled = is_maintenance_enabled(config)
