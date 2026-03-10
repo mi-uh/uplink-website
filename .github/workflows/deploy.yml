@@ -24,6 +24,8 @@ jobs:
 
           # Prevent git pull failure when an old generated bundle exists as untracked file.
           rm -f public/css/bundle.css
+          # Reset previously generated tracked files in public/ before pulling.
+          git restore --source=HEAD --worktree --staged public || git checkout -- public
 
           git pull origin main
 
