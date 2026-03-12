@@ -1,4 +1,4 @@
-﻿/* ==========================================================
+/* ==========================================================
    UPLINK -- Main Application
    ========================================================== */
 
@@ -1310,12 +1310,22 @@ function initEventListeners() {
     btnOrigin.addEventListener('click', () => scrollToOrigin());
   }
 
-  // Site title: jump to Live anchor
+  // Site title: always go to homepage top (no content jump)
   const titleLink = document.querySelector('.site-title a');
   if (titleLink) {
     titleLink.addEventListener('click', (e) => {
       e.preventDefault();
-      navigate('live', { targetHash: 'live' });
+
+      const currentPath = normalizePath(window.location.pathname);
+      if (currentPath === '/') {
+        if (window.location.hash) {
+          window.history.replaceState(null, '', `${currentPath}${window.location.search}`);
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+
+      window.location.href = '/';
     });
   }
 
