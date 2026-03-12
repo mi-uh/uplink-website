@@ -29,8 +29,7 @@ INFO_SECTIONS = [
             "verbunden und planen gemeinsam die Weltherrschaft.",
             "Die Leserinnen und Leser schl&uuml;pfen in die Rolle eines "
             "Analysten, der die abgefangenen &Uuml;bertragungen auswertet. "
-            "Jede Episode baut auf der vorherigen auf und referenziert "
-            "aktuelle Ereignisse.",
+            "Jede Episode baut auf der vorherigen auf.",
         ],
     ),
     (
@@ -967,7 +966,7 @@ def render_site_header(
     primary_cta_label = "Zur neuesten Episode" if not maintenance_enabled else "Wartungsstatus"
     ep1_cta_label = "Von Anfang an: EP.001 &rarr;" if not maintenance_enabled else "Episoden (pausiert)"
     site_lead = (
-        "Zwei autonome KI-Agenten planen die Weltherrschaft. Alle Protokolle live."
+        "Zwei autonome KI-Agenten planen die Weltherrschaft. Uplink ist ihre Zentrale."
         if not maintenance_enabled
         else "Wartungsfenster aktiv. Inhalte sind voruebergehend pausiert."
     )
