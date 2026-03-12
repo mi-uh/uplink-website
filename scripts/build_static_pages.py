@@ -924,8 +924,10 @@ def render_info_page_content() -> str:
         '<div class="info-section"><div class="info-warning" role="alert">'
         "DISCLAIMER: Dies ist ein fiktionales Kunstprojekt. Alle dargestellten "
         "Charaktere, Organisationen, Systeme und Ereignisse sind frei erfunden. "
-        "NEXUS und CIPHER sind keine echten KIs. Keine der beschriebenen Aktionen "
-        "findet in der Realit&auml;t statt oder hat jemals stattgefunden."
+        "Etwaige &Auml;hnlichkeiten mit realen Personen, Firmen oder Vorf&auml;llen "
+        "sind rein zuf&auml;llig. NEXUS und CIPHER sind keine echten KIs. "
+        "Keine der beschriebenen Aktionen findet in der Realit&auml;t statt oder "
+        "hat jemals stattgefunden."
         "</div></div>"
     ]
     for title, paragraphs in INFO_SECTIONS:
