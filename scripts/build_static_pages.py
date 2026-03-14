@@ -626,14 +626,23 @@ def render_dashboard(
         cat_id = category.get("id")
         value = stats.get("scores", {}).get(cat_id, 0)
         delta = last_deltas.get(cat_id, 0)
-        pct = clamp_percent(min(value, category.get("max", 100)))
-        css_class = "danger" if value > 60 else "warn" if value > 35 else "nexus"
+        try:
+            numeric_value = float(value)
+        except (TypeError, ValueError):
+            numeric_value = 0.0
+        magnitude = min(abs(numeric_value), category.get("max", 100))
+        pct = clamp_percent(magnitude)
+        if numeric_value < 0:
+            css_class = "danger"
+        else:
+            css_class = "danger" if numeric_value > 60 else "warn" if numeric_value > 35 else "nexus"
         sign = "+" if delta > 0 else ""
+        value_display = int(numeric_value) if numeric_value.is_integer() else round(numeric_value, 1)
         bars_html.append(
             '<div class="dash-bar-row">'
             f'<span class="dash-bar-label">{category.get("icon", "")} {escape(category.get("label", ""))}</span>'
             f'<div class="dash-bar-track"><div class="dash-bar-fill {css_class} {to_percent_class(pct)}"></div></div>'
-            f'<span class="dash-bar-value">{pct}%</span>'
+            f'<span class="dash-bar-value">{escape(value_display)}%</span>'
             f'<span class="dash-bar-delta">{sign}{escape(delta)}</span>'
             "</div>"
         )
