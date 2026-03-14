@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import html
 import json
+import math
 import re
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -294,6 +295,80 @@ def get_phase(config: dict[str, Any], phase_id: str | None) -> dict[str, Any] | 
             return phase
     return None
 
+
+
+def to_int(value: Any, default: int = 0) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def phase_id_for_day(config: dict[str, Any], day: int) -> str | None:
+    phases = config.get("story_arc", {}).get("phases", [])
+    for phase in phases:
+        bounds = phase.get("days") or [0, 0]
+        start = to_int(bounds[0], 0) if len(bounds) > 0 else 0
+        end = to_int(bounds[1], 0) if len(bounds) > 1 else 0
+        if start <= day <= end:
+            return phase.get("id")
+    return None
+
+
+def resolve_episode_phase_id(
+    episode: dict[str, Any],
+    config: dict[str, Any],
+    fallback_total_days: int = 90,
+) -> str | None:
+    raw_phase = str(episode.get("phase") or "").strip()
+    if raw_phase and get_phase(config, raw_phase):
+        return raw_phase
+
+    day = to_int(episode.get("day"), 0)
+    if day > 0:
+        return phase_id_for_day(config, day)
+
+    ep_num = to_int(episode.get("episode"), 0)
+    if ep_num <= 0:
+        return None
+
+    # Weekly cadence fallback for data without explicit day/phase.
+    total_days = max(1, to_int(fallback_total_days, 90))
+    estimated_day = min(total_days, 1 + (ep_num - 1) * 7)
+    return phase_id_for_day(config, estimated_day)
+
+
+def derive_effective_stats(
+    episodes: list[dict[str, Any]], stats: dict[str, Any], config: dict[str, Any]
+) -> dict[str, Any]:
+    effective = dict(stats or {})
+    total_days = max(1, to_int(effective.get("total_days"), 90))
+    latest_episode = episodes[-1] if episodes else {}
+    latest_ep_num = to_int(latest_episode.get("episode"), 0)
+    stats_episode = to_int(effective.get("current_episode"), 0)
+    current_episode = max(stats_episode, latest_ep_num)
+
+    stats_day = to_int(effective.get("current_day"), 0)
+    cadence_day = 0
+    if current_episode > 0:
+        planned_episodes = max(1, math.ceil(total_days / 7))
+        cadence_day = (
+            total_days if current_episode >= planned_episodes else min(total_days, 1 + (current_episode - 1) * 7)
+        )
+    current_day = min(total_days, max(stats_day, cadence_day)) if max(stats_day, cadence_day) > 0 else stats_day
+
+    episode_phase = resolve_episode_phase_id(latest_episode, config, fallback_total_days=total_days)
+    phase_id = (
+        episode_phase
+        or str(effective.get("phase") or "").strip()
+        or phase_id_for_day(config, current_day)
+    )
+
+    effective["current_episode"] = current_episode
+    effective["current_day"] = current_day
+    effective["total_days"] = total_days
+    effective["phase"] = phase_id
+    return effective
 
 def get_relationship_snapshot(
     episodes: list[dict[str, Any]], stats: dict[str, Any]
@@ -866,38 +941,54 @@ def render_archive(
     episodes: list[dict[str, Any]], stats: dict[str, Any], config: dict[str, Any]
 ) -> str:
     phases = config.get("story_arc", {}).get("phases", [])
+    episodes_by_phase: dict[str, list[dict[str, Any]]] = {phase.get("id"): [] for phase in phases if phase.get("id")}
+
+    latest_phase_id = None
+    for episode in episodes:
+        phase_id = resolve_episode_phase_id(
+            episode,
+            config,
+            fallback_total_days=to_int(stats.get("total_days"), 90),
+        )
+        if phase_id in episodes_by_phase:
+            episodes_by_phase[phase_id].append(episode)
+            latest_phase_id = phase_id
+
+    if not latest_phase_id:
+        latest_phase_id = str(stats.get("phase") or "").strip()
+
     current_index = next(
-        (idx for idx, phase in enumerate(phases) if phase.get("id") == stats.get("phase")),
+        (idx for idx, phase in enumerate(phases) if phase.get("id") == latest_phase_id),
         len(phases) - 1,
     )
     visible_phases = phases[: current_index + 1] if current_index >= 0 else phases
     rendered_phases = []
     for phase_index, phase in enumerate(visible_phases):
         is_current = phase_index == len(visible_phases) - 1
+        phase_id = phase.get("id")
         episodes_in_phase = []
-        for episode in episodes:
+        for episode in episodes_by_phase.get(phase_id, []):
             ep_num = int(episode.get("episode") or 0)
-            if phase.get("days", [0, 0])[0] <= ep_num <= phase.get("days", [0, 0])[1]:
-                first_message = next(
-                    (
-                        normalize_whitespace(message.get("text", ""))
-                        for message in episode.get("messages") or []
-                        if message.get("author")
-                    ),
-                    "",
-                )
-                episodes_in_phase.append(
-                    '<a class="arc-episode" '
-                    f'href="{page_path(ep_num)}#episoden" '
-                    f'data-ep-num="{escape(episode.get("episode"))}">'
-                    f'<span class="arc-ep-num">EP.{pad_number(ep_num)}</span>'
-                    '<div class="arc-episode-main">'
-                    f'<div class="arc-ep-title">// {escape(episode.get("title", ""))}</div>'
-                    f'<div class="arc-ep-preview">{escape(truncate(first_message, 120))}</div>'
-                    "</div>"
-                    f'<span class="arc-ep-date">{format_date(episode.get("date"))}</span>'
-                    "</a>"
-                )
+            first_message = next(
+                (
+                    normalize_whitespace(message.get("text", ""))
+                    for message in episode.get("messages") or []
+                    if message.get("author")
+                ),
+                "",
+            )
+            episodes_in_phase.append(
+                '<a class="arc-episode" '
+                f'href="{page_path(ep_num)}#episoden" '
+                f'data-ep-num="{escape(episode.get("episode"))}">'
+                f'<span class="arc-ep-num">EP.{pad_number(ep_num)}</span>'
+                '<div class="arc-episode-main">'
+                f'<div class="arc-ep-title">// {escape(episode.get("title", ""))}</div>'
+                f'<div class="arc-ep-preview">{escape(truncate(first_message, 120))}</div>'
+                "</div>"
+                f'<span class="arc-ep-date">{format_date(episode.get("date"))}</span>'
+                "</a>"
+            )
         episodes_html = (
             f'<div class="arc-episodes">{"".join(episodes_in_phase)}</div>'
             if episodes_in_phase
@@ -1270,14 +1361,14 @@ def build_episode_page_main(
 ) -> str:
     ep_num = int(episode.get("episode") or 0)
     prev_link = (
-        f'<a class="cta secondary" href="{page_path(ep_num - 1)}">&larr; EP.{pad_number(ep_num - 1)}</a>'
+        f'<a class="cta secondary" href="{page_path(ep_num - 1)}#episoden">&larr; EP.{pad_number(ep_num - 1)}</a>'
         if has_prev
-        else '<a class="cta secondary" href="/episoden.html">Zur &Uuml;bersicht</a>'
+        else '<a class="cta secondary" href="/episoden.html#episoden">Zur &Uuml;bersicht</a>'
     )
     next_link = (
-        f'<a class="cta secondary" href="{page_path(ep_num + 1)}">EP.{pad_number(ep_num + 1)} &rarr;</a>'
+        f'<a class="cta secondary" href="{page_path(ep_num + 1)}#episoden">EP.{pad_number(ep_num + 1)} &rarr;</a>'
         if has_next
-        else '<a class="cta secondary" href="/episoden.html">Alle Episoden</a>'
+        else '<a class="cta secondary" href="/episoden.html#episoden">Alle Episoden</a>'
     )
     view_switch = (
         '<div class="proto-controls" aria-label="Episodenansicht">'
@@ -1461,7 +1552,7 @@ def main() -> None:
 
     config = load_json(config_path)
     episodes = normalize_episodes(load_json(dialogs_path))
-    stats = load_json(stats_path)
+    stats = derive_effective_stats(episodes, load_json(stats_path), config)
     maintenance_enabled = is_maintenance_enabled(config)
     latest_episode = episodes[-1] if episodes else None
     page_meta = (
