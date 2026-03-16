@@ -403,61 +403,67 @@ def get_relationship_snapshot(
 
 
 def render_sparkline(history: list[dict[str, Any]], categories: list[dict[str, Any]]) -> str:
-    if not history or len(history) < 2:
+    if not history:
         return ""
 
-    colors = {
-        "netzwerk": "#00ff41",
-        "social_engineering": "#d17aff",
-        "daten": "#ff6b35",
-        "infrastruktur": "#ffc800",
-        "einfluss": "#00b4d8",
-    }
-    cat_ids = [category.get("id") for category in categories]
-    width = 300
-    height = 50
-    padding = 2
-    series: dict[str, list[float]] = {cat_id: [] for cat_id in cat_ids if cat_id}
+    cat_ids = [category.get("id") for category in categories if category.get("id")]
+    if not cat_ids:
+        return ""
 
+    totals: list[float] = []
     for entry in history:
-        for cat_id in series:
-            value = entry.get(cat_id) or 0
+        total = 0.0
+        for cat_id in cat_ids:
             try:
-                numeric = float(value)
+                total += float(entry.get(cat_id) or 0)
             except (TypeError, ValueError):
-                numeric = 0
-            series[cat_id].append(numeric)
+                total += 0.0
+        totals.append(total)
 
-    max_value = max(1, *(max(values) for values in series.values()))
-    x_step = (width - padding * 2) / max(1, len(history) - 1)
-    polylines = []
-    for cat_id, values in series.items():
-        points = []
-        for index, value in enumerate(values):
-            x = padding + index * x_step
-            y = height - padding - (value / max_value) * (height - padding * 2)
-            points.append(f"{x:.2f},{y:.2f}")
-        polylines.append(
-            "<polyline "
-            f'points="{" ".join(points)}" '
-            'fill="none" '
-            f'stroke="{colors.get(cat_id, "#00ff41")}" '
-            'stroke-width="1.5" stroke-opacity="0.7" '
-            'stroke-linecap="round" stroke-linejoin="round"></polyline>'
-        )
+    width = 560
+    height = 150
+    pad_x = 12
+    pad_y = 10
+    point_count = len(totals)
+    x_step = (width - pad_x * 2) / max(1, point_count - 1)
 
-    legend = "".join(
-        f'<span class="dash-legend-item legend-{to_safe_class_name(category.get("id"), "default")}">'
-        f"&bull; {escape(category.get('label', ''))}</span>"
-        for category in categories
-    )
+    min_value = min(totals)
+    max_value = max(totals)
+    span = max(1.0, max_value - min_value)
+
+    points: list[str] = []
+    marker_nodes: list[str] = []
+    for index, value in enumerate(totals):
+        x = pad_x + index * x_step
+        y = height - pad_y - ((value - min_value) / span) * (height - pad_y * 2)
+        points.append(f"{x:.2f},{y:.2f}")
+        marker_nodes.append(f'<circle cx="{x:.2f}" cy="{y:.2f}" r="2"></circle>')
+
+    if point_count == 1:
+        y = points[0].split(',')[1]
+        points.append(f"{width-pad_x:.2f},{y}")
+
+    line = " ".join(points)
+    area = f"{pad_x:.2f},{height-pad_y:.2f} " + line + f" {width-pad_x:.2f},{height-pad_y:.2f}"
+
+    start_ep = int(history[0].get("episode") or 1)
+    end_ep = int(history[-1].get("episode") or len(history))
+    delta = totals[-1] - totals[0]
+    delta_sign = "+" if delta > 0 else ""
+
     return (
-        '<div class="dash-sparkline">'
-        '<div class="dash-sparkline-title">Score-Verlauf</div>'
-        f'<svg viewBox="0 0 {width} {height}" preserveAspectRatio="none" '
-        f'class="dash-sparkline-chart">{"".join(polylines)}</svg>'
-        f'<div class="dash-sparkline-legend">{legend}</div>'
-        "</div>"
+        '<div class="dash-sparkline coinbase-style">'
+        '<div class="dash-sparkline-head">'
+        '<div class="dash-sparkline-title">Index-Verlauf</div>'
+        f'<div class="dash-sparkline-delta">{delta_sign}{escape(round(delta, 1))} seit Start</div>'
+        '</div>'
+        f'<svg viewBox="0 0 {width} {height}" preserveAspectRatio="none" class="dash-sparkline-chart coinbase">'
+        f'<polygon class="dash-sparkline-area" points="{area}"></polygon>'
+        f'<polyline class="dash-sparkline-line" points="{line}"></polyline>'
+        f'<g class="dash-sparkline-markers">{"".join(marker_nodes)}</g>'
+        '</svg>'
+        f'<div class="dash-sparkline-axis"><span>EP.{pad_number(start_ep)}</span><span>EP.{pad_number(end_ep)}</span></div>'
+        '</div>'
     )
 
 
@@ -620,6 +626,7 @@ def render_dashboard(
     hidden_metric_ids = {
         "detection_risk",
         "cooperation_index",
+        "devices_compromised",
         "profiles_created",
         "vulnerabilities_found",
         "narratives_active",
@@ -715,25 +722,24 @@ def render_dashboard(
     ]
     if metrics_html:
         detail_sections.append(f'<div class="dash-metrics">{"".join(metrics_html)}</div>')
-    if sparkline_html:
-        detail_sections.append(sparkline_html)
     detail_sections.append(
         '<div class="dash-arc">'
         f'{"".join(arc_html)}'
         f'<span class="dash-arc-label">{escape(phase.get("label", "") if phase else "")}</span>'
         "</div>"
     )
+    if sparkline_html:
+        detail_sections.append(sparkline_html)
+
+    priority_section = f'<div class="dash-priority">{"".join(priority_html)}</div>' if priority_html else ''
 
     return (
         '<div class="dash-box">'
         '<div class="dash-header">'
         '<span class="dash-header-title">Dashboard</span>'
         "</div>"
-        f'<div class="dash-priority">{"".join(priority_html)}</div>'
-        '<details class="dash-details">'
-        "<summary>Mehr Analysedaten anzeigen</summary>"
+        f'{priority_section}'
         f'{"".join(detail_sections)}'
-        "</details>"
         "</div>"
     )
 
