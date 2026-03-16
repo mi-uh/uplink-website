@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any
 
 
-APP_VERSION = "20260310"
+APP_VERSION = "20260316-5"
 DEFAULT_BASE_URL = "https://uplink.michaeluhrich.xyz"
 DEFAULT_CONFIG_PATH = Path("data/config.json")
 DEFAULT_DIALOGS_PATH = Path("data/dialogs.json")
@@ -1726,6 +1726,7 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
 
 
 

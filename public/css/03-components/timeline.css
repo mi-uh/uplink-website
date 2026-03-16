@@ -335,7 +335,7 @@
     max-width: 100%;
     box-sizing: border-box;
     -webkit-overflow-scrolling: touch;
-    touch-action: pan-x pinch-zoom;
+    touch-action: auto;
     overscroll-behavior-x: contain;
 }
 
@@ -697,5 +697,4 @@
     height: 14px;
     background: var(--color-line);
 }
-
 

@@ -108,30 +108,36 @@
     }
 
     .terminal-block {
-        padding: 10px 12px;
-        font-size: 0.72rem;
+        padding: 8px 10px;
+        font-size: 0.66rem;
         line-height: 1.6;
+        white-space: pre;
+        overflow-wrap: normal;
+        word-break: normal;
+        overflow-x: auto;
+        overflow-y: hidden;
         -webkit-overflow-scrolling: touch;
-        touch-action: pan-x;
-        box-shadow: inset -28px 0 16px -12px var(--color-bg, #080808);
+        touch-action: manipulation;
+        box-shadow: none;
     }
 
     .terminal-block-wrap {
-        width: calc(100% - 30px);
-        max-width: calc(100% - 30px);
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
     }
 
     .timeline[data-context="live"] .terminal-block-wrap {
-        width: calc(100% - 24px);
-        max-width: calc(100% - 24px);
+        width: 100%;
+        max-width: 100%;
     }
 
     .terminal-block-wrap.owner-nexus {
-        margin-left: 30px;
+        margin-left: 0;
     }
 
     .terminal-block-wrap.owner-cipher {
-        margin-right: 30px;
+        margin-right: 0;
     }
 
     .episode-context {
