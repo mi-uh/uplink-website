@@ -719,9 +719,7 @@ def render_dashboard(
     return (
         '<div class="dash-box">'
         '<div class="dash-header">'
-        '<span class="dash-header-title">Weltherrschafts-Index</span>'
-        f'<span class="dash-header-meta">Tag {escape(stats.get("current_day", "?"))}/{escape(stats.get("total_days", "?"))} &middot; '
-        f'{escape(phase.get("label", "???") if phase else "???")} &middot; Staffel {escape(config.get("project", {}).get("season", "?"))}</span>'
+        '<span class="dash-header-title">Dashboard</span>'
         "</div>"
         f'<div class="dash-priority">{"".join(priority_html)}</div>'
         '<details class="dash-details">'
