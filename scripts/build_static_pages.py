@@ -761,7 +761,7 @@ def render_dashboard(
     detail_sections.append(
         '<div class="dash-arc">'
         f'{"".join(arc_html)}'
-        f'<span class="dash-arc-label">{escape(phase.get("label", "") if phase else "")}</span>'
+        f'<span class="dash-arc-label">{escape(("PHASE: " + (phase.get("label", "") if phase else "--")))}</span>'
         "</div>"
     )
     if sparkline_html:
@@ -1726,6 +1726,7 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
 
 
 
