@@ -1,4 +1,4 @@
-/* ==========================================================
+﻿/* ==========================================================
    DASHBOARD COMPONENT
    ========================================================== */
 
@@ -177,6 +177,37 @@
 
 .dash-bar-fill.danger {
     background: rgba(255, 60, 60, 0.5);
+}
+
+.dash-bar-label.cat-netzwerk { color: #00ff41; }
+.dash-bar-label.cat-social_engineering { color: #d17aff; }
+.dash-bar-label.cat-daten { color: #ff6b35; }
+.dash-bar-label.cat-infrastruktur { color: #ffc800; }
+.dash-bar-label.cat-einfluss { color: #00b4d8; }
+
+.dash-bar-fill.cat-netzwerk {
+    background: rgba(0, 255, 65, 0.5);
+    box-shadow: 0 0 8px rgba(0, 255, 65, 0.2);
+}
+
+.dash-bar-fill.cat-social_engineering {
+    background: rgba(209, 122, 255, 0.5);
+    box-shadow: 0 0 8px rgba(209, 122, 255, 0.2);
+}
+
+.dash-bar-fill.cat-daten {
+    background: rgba(255, 107, 53, 0.5);
+    box-shadow: 0 0 8px rgba(255, 107, 53, 0.2);
+}
+
+.dash-bar-fill.cat-infrastruktur {
+    background: rgba(255, 200, 0, 0.5);
+    box-shadow: 0 0 8px rgba(255, 200, 0, 0.2);
+}
+
+.dash-bar-fill.cat-einfluss {
+    background: rgba(0, 180, 216, 0.5);
+    box-shadow: 0 0 8px rgba(0, 180, 216, 0.2);
 }
 
 .dash-bar-value {
@@ -423,3 +454,13 @@
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
+
+
+.dash-subnote {
+  padding: 8px 16px 6px;
+  font-size: 0.68rem;
+  color: var(--color-text-dim);
+  letter-spacing: 0.03em;
+  border-bottom: 1px solid rgba(0, 255, 65, 0.08);
+}
+

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """Build static SEO-friendly HTML pages from the JSON content files."""
 
 from __future__ import annotations
@@ -416,10 +416,10 @@ def render_sparkline(history: list[dict[str, Any]], categories: list[dict[str, A
     }
     colors = {
         "netzwerk": "#00ff41",
-        "social_engineering": "#86efac",
-        "daten": "#22c55e",
-        "infrastruktur": "#16a34a",
-        "einfluss": "#4ade80",
+        "social_engineering": "#d17aff",
+        "daten": "#ff6b35",
+        "infrastruktur": "#ffc800",
+        "einfluss": "#00b4d8",
     }
 
     cat_ids = [category.get("id") for category in categories if category.get("id") in allowed]
@@ -686,12 +686,13 @@ def render_dashboard(
             css_class = "danger"
         else:
             css_class = "danger" if pct > 60 else "warn" if pct > 35 else "nexus"
+        cat_class = f"cat-{to_safe_class_name(cat_id, 'default')}"
         sign = "+" if delta > 0 else ""
         value_display = f"{pct}"
         bars_html.append(
             '<div class="dash-bar-row">'
-            f'<span class="dash-bar-label">{category.get("icon", "")} {escape(category.get("label", ""))}</span>'
-            f'<div class="dash-bar-track"><div class="dash-bar-fill {css_class} {to_percent_class(pct)}"></div></div>'
+            f'<span class="dash-bar-label {cat_class}">{category.get("icon", "")} {escape(category.get("label", ""))}</span>'
+            f'<div class="dash-bar-track"><div class="dash-bar-fill {css_class} {cat_class} {to_percent_class(pct)}"></div></div>'
             f'<span class="dash-bar-value">{escape(value_display)}%</span>'
             f'<span class="dash-bar-delta">{sign}{escape(delta)}</span>'
             "</div>"
@@ -773,6 +774,7 @@ def render_dashboard(
         '<div class="dash-header">'
         '<span class="dash-header-title">Dashboard</span>'
         "</div>"
+        '<div class="dash-subnote">Wie weit sind NEXUS und CIPHER? 0 % = blind. 100 % = volle Kontrolle.</div>'
         f'{priority_section}'
         f'{"".join(detail_sections)}'
         "</div>"
@@ -1361,7 +1363,7 @@ def build_live_main(
         '<section class="page active" id="page-live">'
         '<span id="live" class="page-anchor" aria-hidden="true"></span>'
         '<header class="page-header"><div><span class="page-eyebrow">Live</span>'
-        '<h2>Konsole</h2><p>Neueste Uebertragungen, Scores und Status auf einen Blick.</p>'
+        '<h2>Konsole</h2><p>Neueste Übertragungen, Scores und Status auf einen Blick.</p>'
         '</div></header>'
         '<div class="live-toolbar" aria-label="Status">'
         '<div class="live-agents"><span><span class="status-dot nexus" aria-hidden="true"></span>NEXUS aktiv</span>'
@@ -1369,7 +1371,7 @@ def build_live_main(
         "</div>"
         '<div class="live-announce" id="live-announce" hidden aria-live="polite"></div>'
         f'<div class="dashboard" id="dashboard" aria-label="Dashboard mit aktuellen Metriken">{render_dashboard(episodes, stats, config)}</div>'
-        f'<div class="timeline" id="timeline-live" aria-label="Neueste Uebertragungen">{timeline_html}</div>'
+        f'<div class="timeline" id="timeline-live" aria-label="Neueste Übertragungen">{timeline_html}</div>'
         '<div class="page-end-actions"><button type="button" class="page-top-btn" id="btn-top-live">Nach oben</button></div>'
         "</section>"
     )
@@ -1724,3 +1726,6 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+
+
