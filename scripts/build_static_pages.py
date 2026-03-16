@@ -617,6 +617,14 @@ def render_dashboard(
     categories = config.get("scoring", {}).get("categories", [])
     metrics = stats.get("metrics") or {}
     metric_defs = config.get("scoring", {}).get("metrics", [])
+    hidden_metric_ids = {
+        "detection_risk",
+        "cooperation_index",
+        "profiles_created",
+        "vulnerabilities_found",
+        "narratives_active",
+    }
+    metric_defs = [definition for definition in metric_defs if definition.get("id") not in hidden_metric_ids]
     phase = get_phase(config, stats.get("phase"))
     last_episode = episodes[-1] if episodes else {}
     last_deltas = last_episode.get("score_delta") or {}
