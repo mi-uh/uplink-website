@@ -1298,7 +1298,7 @@ def build_page(
   <link rel="alternate" hreflang="de" href="{escape(canonical_url)}">
   <link rel="alternate" hreflang="x-default" href="{escape(base_url.rstrip('/') + '/')}">
   <meta name="uplink-runtime" content="{escape(runtime_json)}">
-  <link rel="stylesheet" href="/css/bundle.css">
+  <link rel="stylesheet" href="/css/bundle.css?v={APP_VERSION}">
   {structured_data}
 </head>
 <body data-site-mode="static" data-page="{escape(page)}">
@@ -1726,6 +1726,7 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
 
 
 
