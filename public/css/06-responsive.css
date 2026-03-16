@@ -117,10 +117,12 @@
     }
 
     .terminal-block-wrap {
+        width: calc(100% - 30px);
         max-width: calc(100% - 30px);
     }
 
     .timeline[data-context="live"] .terminal-block-wrap {
+        width: calc(100% - 24px);
         max-width: calc(100% - 24px);
     }
 

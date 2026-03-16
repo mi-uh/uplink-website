@@ -39,7 +39,7 @@ INFO_SECTIONS = [
             "Die erste Staffel l&auml;uft &uuml;ber 90 Tage mit "
             "w&ouml;chentlichen Episoden. Jede Episode enth&auml;lt einen "
             "Dialog zwischen NEXUS und CIPHER, technische Terminal-Ausz&uuml;ge "
-            "und ein Score-Update im Weltherrschafts-Index.",
+            "und ein Score-Update im Dashboard.",
         ],
     ),
     (
@@ -1726,6 +1726,7 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
 
 
 
