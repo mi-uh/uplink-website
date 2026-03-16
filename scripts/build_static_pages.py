@@ -406,62 +406,96 @@ def render_sparkline(history: list[dict[str, Any]], categories: list[dict[str, A
     if not history:
         return ""
 
-    cat_ids = [category.get("id") for category in categories if category.get("id")]
+    allowed = ["netzwerk", "social_engineering", "daten", "infrastruktur", "einfluss"]
+    labels = {
+        "netzwerk": "Netzwerk",
+        "social_engineering": "Social Eng.",
+        "daten": "Daten",
+        "infrastruktur": "Infrastruktur",
+        "einfluss": "Einfluss",
+    }
+    colors = {
+        "netzwerk": "#00ff41",
+        "social_engineering": "#86efac",
+        "daten": "#22c55e",
+        "infrastruktur": "#16a34a",
+        "einfluss": "#4ade80",
+    }
+
+    cat_ids = [category.get("id") for category in categories if category.get("id") in allowed]
+    if not cat_ids:
+        cat_ids = [cid for cid in allowed if any(cid in item for item in history)]
     if not cat_ids:
         return ""
-
-    totals: list[float] = []
-    for entry in history:
-        total = 0.0
-        for cat_id in cat_ids:
-            try:
-                total += float(entry.get(cat_id) or 0)
-            except (TypeError, ValueError):
-                total += 0.0
-        totals.append(total)
 
     width = 560
     height = 150
     pad_x = 12
     pad_y = 10
-    point_count = len(totals)
+
+    point_count = len(history)
     x_step = (width - pad_x * 2) / max(1, point_count - 1)
 
-    min_value = min(totals)
-    max_value = max(totals)
+    series: dict[str, list[float]] = {cat_id: [] for cat_id in cat_ids}
+    for entry in history:
+        for cat_id in cat_ids:
+            try:
+                series[cat_id].append(float(entry.get(cat_id) or 0))
+            except (TypeError, ValueError):
+                series[cat_id].append(0.0)
+
+    all_values = [value for values in series.values() for value in values]
+    min_value = min(all_values) if all_values else 0.0
+    max_value = max(all_values) if all_values else 1.0
     span = max(1.0, max_value - min_value)
 
-    points: list[str] = []
-    marker_nodes: list[str] = []
-    for index, value in enumerate(totals):
-        x = pad_x + index * x_step
-        y = height - pad_y - ((value - min_value) / span) * (height - pad_y * 2)
-        points.append(f"{x:.2f},{y:.2f}")
-        marker_nodes.append(f'<circle cx="{x:.2f}" cy="{y:.2f}" r="2"></circle>')
+    polylines = []
+    end_markers = []
+    for cat_id in cat_ids:
+        points = []
+        values = series[cat_id]
+        for index, value in enumerate(values):
+            x = pad_x + index * x_step
+            y = height - pad_y - ((value - min_value) / span) * (height - pad_y * 2)
+            points.append(f"{x:.2f},{y:.2f}")
 
-    if point_count == 1:
-        y = points[0].split(',')[1]
-        points.append(f"{width-pad_x:.2f},{y}")
+        if point_count == 1 and points:
+            y = points[0].split(',')[1]
+            points.append(f"{width-pad_x:.2f},{y}")
 
-    line = " ".join(points)
-    area = f"{pad_x:.2f},{height-pad_y:.2f} " + line + f" {width-pad_x:.2f},{height-pad_y:.2f}"
+        polylines.append(
+            '<polyline '
+            f'points="{" ".join(points)}" '
+            'fill="none" '
+            f'stroke="{colors.get(cat_id, "#00ff41")}" '
+            'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" '
+            'stroke-opacity="0.95"></polyline>'
+        )
+        if points:
+            end_point = points[-1].split(',')
+            end_markers.append(
+                f'<circle cx="{end_point[0]}" cy="{end_point[1]}" r="2.2" fill="#051007" stroke="{colors.get(cat_id, "#00ff41")}" stroke-width="1.2"></circle>'
+            )
 
     start_ep = int(history[0].get("episode") or 1)
     end_ep = int(history[-1].get("episode") or len(history))
-    delta = totals[-1] - totals[0]
-    delta_sign = "+" if delta > 0 else ""
+
+    legend = ''.join(
+        f'<span class="dash-legend-item legend-{to_safe_class_name(cat_id, "default")}">&bull; {escape(labels.get(cat_id, cat_id))}</span>'
+        for cat_id in cat_ids
+    )
 
     return (
         '<div class="dash-sparkline coinbase-style">'
         '<div class="dash-sparkline-head">'
-        '<div class="dash-sparkline-title">Index-Verlauf</div>'
-        f'<div class="dash-sparkline-delta">{delta_sign}{escape(round(delta, 1))} seit Start</div>'
+        '<div class="dash-sparkline-title">Kategorie-Verlauf</div>'
+        f'<div class="dash-sparkline-delta">EP.{pad_number(start_ep)} bis EP.{pad_number(end_ep)}</div>'
         '</div>'
         f'<svg viewBox="0 0 {width} {height}" preserveAspectRatio="none" class="dash-sparkline-chart coinbase">'
-        f'<polygon class="dash-sparkline-area" points="{area}"></polygon>'
-        f'<polyline class="dash-sparkline-line" points="{line}"></polyline>'
-        f'<g class="dash-sparkline-markers">{"".join(marker_nodes)}</g>'
+        f'{"".join(polylines)}'
+        f'<g class="dash-sparkline-markers">{"".join(end_markers)}</g>'
         '</svg>'
+        f'<div class="dash-sparkline-legend">{legend}</div>'
         f'<div class="dash-sparkline-axis"><span>EP.{pad_number(start_ep)}</span><span>EP.{pad_number(end_ep)}</span></div>'
         '</div>'
     )
@@ -646,13 +680,14 @@ def render_dashboard(
         except (TypeError, ValueError):
             numeric_value = 0.0
         magnitude = min(abs(numeric_value), category.get("max", 100))
-        pct = clamp_percent(magnitude)
+        cat_max = category.get("max", 100)
+        pct = clamp_percent(round(magnitude / cat_max * 100)) if cat_max > 0 else 0
         if numeric_value < 0:
             css_class = "danger"
         else:
-            css_class = "danger" if numeric_value > 60 else "warn" if numeric_value > 35 else "nexus"
+            css_class = "danger" if pct > 60 else "warn" if pct > 35 else "nexus"
         sign = "+" if delta > 0 else ""
-        value_display = int(numeric_value) if numeric_value.is_integer() else round(numeric_value, 1)
+        value_display = f"{pct}"
         bars_html.append(
             '<div class="dash-bar-row">'
             f'<span class="dash-bar-label">{category.get("icon", "")} {escape(category.get("label", ""))}</span>'
